@@ -5,7 +5,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import Layout from './components/Layout-simple';
-import Login from './pages/Login-beautiful';
+import Login from './pages/Login';
 import ReportsList from './pages/ReportsList-full';
 import ReportForm from './pages/ReportForm-full';
 import ReportViewer from './pages/ReportViewer-full';
