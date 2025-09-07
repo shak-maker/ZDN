@@ -31,6 +31,50 @@ import {
   Code as CodeIcon,
 } from '@mui/icons-material';
 
+// Canonical JSON interfaces (matching backend)
+interface HemjiltDetail {
+  ActualDensity: string;
+  ZDNMT: string;
+  DensityAt20c: string;
+  DifferenceZdnRWBMT: string;
+  DifferenceZdnRWBMTProcent: string;
+  DipSm: string;
+  GOVLtr: string;
+  RTCNo: string;
+  RWBMTGross: string;
+  RWBNo: string;
+  SealNo: string;
+  TOVltr: string;
+  Temperature: string;
+  Type: string;
+  WaterLtr: string;
+  WaterSm: string;
+}
+
+interface Hemjilt {
+  ContractNo: string;
+  Customer: string;
+  DischargeCommenced: string;
+  DischargeCompleted: string;
+  FullCompleted: string;
+  HandledBy: string;
+  HemjiltDetails: HemjiltDetail[];
+}
+
+interface CanonicalReport {
+  Message: string;
+  SendDate: string;
+  Success: boolean;
+  Hemjilt: Hemjilt;
+  Inspector: string;
+  Location: string;
+  Object: string;
+  Product: string;
+  ReportDate: string;
+  ReportNo: string;
+}
+
+// Legacy interfaces for backward compatibility
 interface ReportDetail {
   id?: number;
   actualDensity?: string;
@@ -74,6 +118,7 @@ const ReportViewer: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [report, setReport] = useState<Report | null>(null);
+  const [canonicalReport, setCanonicalReport] = useState<CanonicalReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [jsonDialogOpen, setJsonDialogOpen] = useState(false);
@@ -87,7 +132,7 @@ const ReportViewer: React.FC = () => {
   const fetchReport = async (reportId: number) => {
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:3001/api/reports/${reportId}`, {
+      const response = await fetch(`http://localhost:3001/api/reports/${reportId}?t=${Date.now()}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
@@ -97,8 +142,44 @@ const ReportViewer: React.FC = () => {
         throw new Error('Failed to fetch report');
       }
 
-      const report: Report = await response.json();
-      setReport(report);
+      const canonicalData: CanonicalReport = await response.json();
+      setCanonicalReport(canonicalData);
+      
+      // Convert canonical format to legacy format for display
+      const legacyReport: Report = {
+        id: reportId,
+        contractNo: canonicalData.Hemjilt?.ContractNo,
+        customer: canonicalData.Hemjilt?.Customer,
+        dischargeCommenced: canonicalData.Hemjilt?.DischargeCommenced,
+        dischargeCompleted: canonicalData.Hemjilt?.DischargeCompleted,
+        fullCompleted: canonicalData.Hemjilt?.FullCompleted,
+        handledBy: canonicalData.Hemjilt?.HandledBy,
+        inspector: canonicalData.Inspector,
+        location: canonicalData.Location,
+        object: canonicalData.Object,
+        product: canonicalData.Product,
+        reportDate: canonicalData.ReportDate,
+        reportNo: canonicalData.ReportNo,
+        reportDetails: canonicalData.Hemjilt?.HemjiltDetails?.map(detail => ({
+          actualDensity: detail.ActualDensity,
+          zdnmt: detail.ZDNMT,
+          densityAt20c: detail.DensityAt20c,
+          differenceZdnRwbmt: detail.DifferenceZdnRWBMT,
+          differenceZdnRwbmtPercent: detail.DifferenceZdnRWBMTProcent,
+          dipSm: detail.DipSm,
+          govLiters: parseFloat(detail.GOVLtr) || 0,
+          rtcNo: detail.RTCNo,
+          rwbmtGross: detail.RWBMTGross,
+          rwbNo: detail.RWBNo,
+          sealNo: detail.SealNo,
+          tovLiters: parseFloat(detail.TOVltr) || 0,
+          temperatureC: detail.Temperature,
+          type: detail.Type,
+          waterLiters: parseFloat(detail.WaterLtr) || 0,
+          waterSm: detail.WaterSm,
+        })) || [],
+      };
+      setReport(legacyReport);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch report');
     } finally {
@@ -112,12 +193,12 @@ const ReportViewer: React.FC = () => {
   };
 
   const downloadJson = () => {
-    if (!report) return;
+    if (!canonicalReport) return;
     
-    const dataStr = JSON.stringify(report, null, 2);
+    const dataStr = JSON.stringify(canonicalReport, null, 2);
     const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
     
-    const exportFileDefaultName = `report_${report.reportNo}_${new Date().toISOString().split('T')[0]}.json`;
+    const exportFileDefaultName = `report_${canonicalReport.ReportNo}_${new Date().toISOString().split('T')[0]}.json`;
     
     const linkElement = document.createElement('a');
     linkElement.setAttribute('href', dataUri);
@@ -307,11 +388,13 @@ const ReportViewer: React.FC = () => {
                 <Typography variant="body2" color="text.secondary">
                   Product
                 </Typography>
-                <Typography variant="body1">
+                <Box>
                   {report.product ? (
                     <Chip label={report.product} size="small" variant="outlined" />
-                  ) : '-'}
-                </Typography>
+                  ) : (
+                    <Typography variant="body1">-</Typography>
+                  )}
+                </Box>
               </Grid>
               <Grid item xs={12} sm={6}>
                 <Typography variant="body2" color="text.secondary">
@@ -575,10 +658,10 @@ const ReportViewer: React.FC = () => {
       </Grid>
 
       <Dialog open={jsonDialogOpen} onClose={() => setJsonDialogOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>Report JSON Data</DialogTitle>
+        <DialogTitle>Report JSON Data (Canonical Format)</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            This is the complete JSON data for this report:
+            This is the canonical JSON format for this report (same format as example JSON):
           </DialogContentText>
           <Divider sx={{ my: 2 }} />
           <Box
@@ -592,7 +675,7 @@ const ReportViewer: React.FC = () => {
               fontSize: '0.875rem',
             }}
           >
-            {JSON.stringify(report, null, 2)}
+            {canonicalReport ? JSON.stringify(canonicalReport, null, 2) : 'Loading...'}
           </Box>
         </DialogContent>
         <DialogActions>

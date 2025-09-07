@@ -17,9 +17,9 @@ export class RegisterDto {
   @IsString()
   username: string;
 
-  @ApiProperty({ description: 'Email address' })
-  @IsEmail()
-  email: string;
+  @ApiProperty({ description: 'Full name' })
+  @IsString()
+  fullName: string;
 
   @ApiProperty({ description: 'Password', minLength: 6 })
   @IsString()

@@ -2,8 +2,8 @@ export interface HemjiltDetail {
   ActualDensity: string;
   ZDNMT: string;
   DensityAt20c: string;
-  DiffrenceAmberRWBMT: string;
-  DiffrenceAmberRWBMTProcent: string;
+  DifferenceZdnRWBMT: string;
+  DifferenceZdnRWBMTProcent: string;
   DipSm: string;
   GOVLtr: string;
   RTCNo: string;
@@ -11,7 +11,7 @@ export interface HemjiltDetail {
   RWBNo: string;
   SealNo: string;
   TOVltr: string;
-  Temprature: string;
+  Temperature: string;
   Type: string;
   WaterLtr: string;
   WaterSm: string;
@@ -24,12 +24,6 @@ export interface Hemjilt {
   DischargeCompleted: string;
   FullCompleted: string;
   HandledBy: string;
-  Inspector: string;
-  Location: string;
-  Object: string;
-  Product: string;
-  ReportDate: string;
-  ReportNo: string;
   HemjiltDetails: HemjiltDetail[];
 }
 
@@ -38,5 +32,11 @@ export interface CanonicalJsonResponse {
   SendDate: string;
   Success: boolean;
   Hemjilt: Hemjilt;
+  Inspector: string;
+  Location: string;
+  Object: string;
+  Product: string;
+  ReportDate: string;
+  ReportNo: string;
   [key: string]: any; // Add index signature for Prisma compatibility
 }

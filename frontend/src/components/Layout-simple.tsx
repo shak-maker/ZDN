@@ -18,6 +18,7 @@ import {
   Menu as MenuIcon,
   Assessment as AssessmentIcon,
   Add as AddIcon,
+  People as PeopleIcon,
   Logout as LogoutIcon,
 } from '@mui/icons-material';
 
@@ -47,6 +48,11 @@ const Layout: React.FC = () => {
       text: 'New Report',
       icon: <AddIcon />,
       path: '/reports/new',
+    },
+    {
+      text: 'Team Members',
+      icon: <PeopleIcon />,
+      path: '/users',
     },
   ];
 

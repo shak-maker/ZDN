@@ -9,15 +9,56 @@ import Login from './pages/Login';
 import ReportsList from './pages/ReportsList-full';
 import ReportForm from './pages/ReportForm-full';
 import ReportViewer from './pages/ReportViewer-full';
+import UserManagement from './pages/UserManagement';
 import { AuthProvider, useAuth } from './contexts/AuthContext-basic';
 
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#1976d2',
+      main: '#1e3a8a',
+      light: '#3730a3',
+      dark: '#581c87',
     },
     secondary: {
-      main: '#dc004e',
+      main: '#ef4444',
+      light: '#f87171',
+      dark: '#dc2626',
+    },
+    background: {
+      default: '#f8fafc',
+      paper: '#ffffff',
+    },
+  },
+  typography: {
+    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+    h1: {
+      fontWeight: 700,
+    },
+    h2: {
+      fontWeight: 600,
+    },
+    h3: {
+      fontWeight: 600,
+    },
+  },
+  shape: {
+    borderRadius: 12,
+  },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          textTransform: 'none',
+          fontWeight: 600,
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+        },
+      },
     },
   },
 });
@@ -51,6 +92,7 @@ function App() {
                 <Route path="reports/new" element={<ReportForm />} />
                 <Route path="reports/:id" element={<ReportViewer />} />
                 <Route path="reports/:id/edit" element={<ReportForm />} />
+                <Route path="users" element={<UserManagement />} />
               </Route>
             </Routes>
           </Router>

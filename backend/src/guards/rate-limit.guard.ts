@@ -1,9 +1,9 @@
 import { Injectable, ExecutionContext, HttpException, HttpStatus } from '@nestjs/common';
-import { ThrottlerGuard } from '@nestjs/throttler';
+import { ThrottlerGuard, ThrottlerLimitDetail } from '@nestjs/throttler';
 
 @Injectable()
 export class RateLimitGuard extends ThrottlerGuard {
-  protected throwThrottlingException(context: ExecutionContext): void {
+  protected async throwThrottlingException(context: ExecutionContext, throttlerLimitDetail: ThrottlerLimitDetail): Promise<void> {
     const request = context.switchToHttp().getRequest();
     const ip = request.ip || request.connection.remoteAddress;
     
@@ -20,7 +20,7 @@ export class RateLimitGuard extends ThrottlerGuard {
     );
   }
 
-  protected getTracker(req: Record<string, any>): string {
+  protected async getTracker(req: Record<string, any>): Promise<string> {
     // Use IP address as the primary tracker
     return req.ip || req.connection.remoteAddress || 'unknown';
   }

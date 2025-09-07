@@ -41,6 +41,7 @@ export class AuthService {
       user: {
         id: user.id,
         username: user.username,
+        fullName: user.fullName,
         email: user.email,
         role: user.role,
       },
@@ -51,15 +52,12 @@ export class AuthService {
     // Check if user already exists
     const existingUser = await this.prisma.user.findFirst({
       where: {
-        OR: [
-          { username: registerDto.username },
-          { email: registerDto.email },
-        ],
+        username: registerDto.username,
       },
     });
 
     if (existingUser) {
-      throw new ConflictException('User with this username or email already exists');
+      throw new ConflictException('User with this username already exists');
     }
 
     // Hash password
@@ -69,7 +67,8 @@ export class AuthService {
     const user = await this.prisma.user.create({
       data: {
         username: registerDto.username,
-        email: registerDto.email,
+        fullName: registerDto.fullName,
+        email: null, // Email is optional now
         password: hashedPassword,
         role: 'USER',
       },
@@ -77,5 +76,25 @@ export class AuthService {
 
     const { password: _, ...result } = user;
     return result;
+  }
+
+  async getAllUsers() {
+    const users = await this.prisma.user.findMany({
+      select: {
+        id: true,
+        username: true,
+        fullName: true,
+        email: true,
+        role: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    return users;
   }
 }

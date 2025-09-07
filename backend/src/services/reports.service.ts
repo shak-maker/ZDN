@@ -54,9 +54,9 @@ export class ReportsService {
             actualDensity: detail.actualDensity ? parseFloat(detail.actualDensity) : null,
             zdnmt: detail.zdnmt ? parseFloat(detail.zdnmt) : null,
             densityAt20c: detail.densityAt20c ? parseFloat(detail.densityAt20c) : null,
-            differenceAmberRwbmt: detail.differenceAmberRwbmt ? parseFloat(detail.differenceAmberRwbmt) : null,
-            differenceAmberRwbmtPercent: detail.differenceAmberRwbmtPercent ? parseFloat(detail.differenceAmberRwbmtPercent) : null,
-            dipCm: detail.dipCm ? parseFloat(detail.dipCm) : null,
+            differenceZdnRwbmt: detail.differenceZdnRwbmt ? parseFloat(detail.differenceZdnRwbmt) : null,
+            differenceZdnRwbmtPercent: detail.differenceZdnRwbmtPercent ? parseFloat(detail.differenceZdnRwbmtPercent) : null,
+            dipSm: detail.dipSm ? parseFloat(detail.dipSm) : null,
             govLiters: detail.govLiters,
             rtcNo: detail.rtcNo,
             rwbmtGross: detail.rwbmtGross ? parseFloat(detail.rwbmtGross) : null,
@@ -64,9 +64,9 @@ export class ReportsService {
             sealNo: detail.sealNo,
             tovLiters: detail.tovLiters,
             temperatureC: detail.temperatureC ? parseFloat(detail.temperatureC) : null,
-            type: detail.type,
-            waterLiters: detail.waterLiters,
-            waterCm: detail.waterCm ? parseFloat(detail.waterCm) : null,
+            type: detail.type || undefined,
+            waterLiters: detail.waterLiters || undefined,
+            waterSm: detail.waterSm ? parseFloat(detail.waterSm) : null,
           })),
         });
       }
@@ -125,7 +125,7 @@ export class ReportsService {
     };
   }
 
-  async findOne(id: number) {
+  async findOne(id: number): Promise<CanonicalJsonResponse> {
     const report = await this.prisma.report.findUnique({
       where: { id },
       include: {
@@ -137,7 +137,41 @@ export class ReportsService {
       throw new NotFoundException(`Report with ID ${id} not found`);
     }
 
-    return report;
+    // Regenerate canonical JSON from current database state
+    const reportData = {
+      contractNo: report.contractNo || undefined,
+      customer: report.customer || undefined,
+      dischargeCommenced: report.dischargeCommenced?.toISOString(),
+      dischargeCompleted: report.dischargeCompleted?.toISOString(),
+      fullCompleted: report.fullCompleted?.toISOString(),
+      handledBy: report.handledBy || undefined,
+      inspector: report.inspector || undefined,
+      location: report.location || undefined,
+      object: report.object || undefined,
+      product: report.product || undefined,
+      reportDate: report.reportDate?.toISOString(),
+      reportNo: report.reportNo,
+      reportDetails: report.reportDetails.map(detail => ({
+        actualDensity: detail.actualDensity?.toString(),
+        zdnmt: detail.zdnmt?.toString(),
+        densityAt20c: detail.densityAt20c?.toString(),
+        differenceZdnRwbmt: detail.differenceZdnRwbmt?.toString(),
+        differenceZdnRwbmtPercent: detail.differenceZdnRwbmtPercent?.toString(),
+        dipSm: detail.dipSm?.toString(),
+        govLiters: detail.govLiters || undefined,
+        rtcNo: detail.rtcNo || undefined,
+        rwbmtGross: detail.rwbmtGross?.toString(),
+        rwbNo: detail.rwbNo || undefined,
+        sealNo: detail.sealNo || undefined,
+        tovLiters: detail.tovLiters || undefined,
+        temperatureC: detail.temperatureC?.toString(),
+        type: detail.type || undefined,
+        waterLiters: detail.waterLiters || undefined,
+        waterSm: detail.waterSm?.toString(),
+      }))
+    };
+
+    return this.jsonTransformation.transformToCanonicalJson(reportData);
   }
 
   async findByReportNo(reportNo: string): Promise<CanonicalJsonResponse> {
@@ -152,14 +186,55 @@ export class ReportsService {
       return this.jsonTransformation.createErrorResponse('Report not found');
     }
 
-    return report.jsonData as unknown as CanonicalJsonResponse;
+    // Regenerate canonical JSON from current database state
+    const reportData = {
+      contractNo: report.contractNo || undefined,
+      customer: report.customer || undefined,
+      dischargeCommenced: report.dischargeCommenced?.toISOString(),
+      dischargeCompleted: report.dischargeCompleted?.toISOString(),
+      fullCompleted: report.fullCompleted?.toISOString(),
+      handledBy: report.handledBy || undefined,
+      inspector: report.inspector || undefined,
+      location: report.location || undefined,
+      object: report.object || undefined,
+      product: report.product || undefined,
+      reportDate: report.reportDate?.toISOString(),
+      reportNo: report.reportNo,
+      reportDetails: report.reportDetails.map(detail => ({
+        actualDensity: detail.actualDensity?.toString(),
+        zdnmt: detail.zdnmt?.toString(),
+        densityAt20c: detail.densityAt20c?.toString(),
+        differenceZdnRwbmt: detail.differenceZdnRwbmt?.toString(),
+        differenceZdnRwbmtPercent: detail.differenceZdnRwbmtPercent?.toString(),
+        dipSm: detail.dipSm?.toString(),
+        govLiters: detail.govLiters || undefined,
+        rtcNo: detail.rtcNo || undefined,
+        rwbmtGross: detail.rwbmtGross?.toString(),
+        rwbNo: detail.rwbNo || undefined,
+        sealNo: detail.sealNo || undefined,
+        tovLiters: detail.tovLiters || undefined,
+        temperatureC: detail.temperatureC?.toString(),
+        type: detail.type || undefined,
+        waterLiters: detail.waterLiters || undefined,
+        waterSm: detail.waterSm?.toString(),
+      }))
+    };
+
+    return this.jsonTransformation.transformToCanonicalJson(reportData);
   }
 
   async update(id: number, updateReportDto: UpdateReportDto) {
-    const existingReport = await this.findOne(id);
+    // Get the actual database record to check the current report number
+    const existingDbReport = await this.prisma.report.findUnique({
+      where: { id },
+    });
+
+    if (!existingDbReport) {
+      throw new NotFoundException(`Report with ID ${id} not found`);
+    }
 
     // Check if report number is being changed and if it already exists
-    if (updateReportDto.reportNo && updateReportDto.reportNo !== existingReport.reportNo) {
+    if (updateReportDto.reportNo && updateReportDto.reportNo !== existingDbReport.reportNo) {
       const reportWithSameNumber = await this.prisma.report.findUnique({
         where: { reportNo: updateReportDto.reportNo },
       });
@@ -171,7 +246,7 @@ export class ReportsService {
 
     // Transform to canonical JSON if any data is being updated
     const canonicalJson = this.jsonTransformation.transformToCanonicalJson({
-      ...existingReport,
+      ...existingDbReport,
       ...updateReportDto,
     } as CreateReportDto);
 
@@ -211,9 +286,9 @@ export class ReportsService {
               actualDensity: detail.actualDensity ? parseFloat(detail.actualDensity) : null,
               zdnmt: detail.zdnmt ? parseFloat(detail.zdnmt) : null,
               densityAt20c: detail.densityAt20c ? parseFloat(detail.densityAt20c) : null,
-              differenceAmberRwbmt: detail.differenceAmberRwbmt ? parseFloat(detail.differenceAmberRwbmt) : null,
-              differenceAmberRwbmtPercent: detail.differenceAmberRwbmtPercent ? parseFloat(detail.differenceAmberRwbmtPercent) : null,
-              dipCm: detail.dipCm ? parseFloat(detail.dipCm) : null,
+              differenceZdnRwbmt: detail.differenceZdnRwbmt ? parseFloat(detail.differenceZdnRwbmt) : null,
+              differenceZdnRwbmtPercent: detail.differenceZdnRwbmtPercent ? parseFloat(detail.differenceZdnRwbmtPercent) : null,
+              dipSm: detail.dipSm ? parseFloat(detail.dipSm) : null,
               govLiters: detail.govLiters,
               rtcNo: detail.rtcNo,
               rwbmtGross: detail.rwbmtGross ? parseFloat(detail.rwbmtGross) : null,
@@ -221,9 +296,9 @@ export class ReportsService {
               sealNo: detail.sealNo,
               tovLiters: detail.tovLiters,
               temperatureC: detail.temperatureC ? parseFloat(detail.temperatureC) : null,
-              type: detail.type,
-              waterLiters: detail.waterLiters,
-              waterCm: detail.waterCm ? parseFloat(detail.waterCm) : null,
+              type: detail.type || undefined,
+              waterLiters: detail.waterLiters || undefined,
+              waterSm: detail.waterSm ? parseFloat(detail.waterSm) : null,
             })),
           });
         }

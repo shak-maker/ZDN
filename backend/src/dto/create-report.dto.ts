@@ -18,20 +18,20 @@ export class CreateReportDetailDto {
   @IsString()
   densityAt20c?: string;
 
-  @ApiPropertyOptional({ description: 'Difference amber RWBMT' })
+  @ApiPropertyOptional({ description: 'Difference ZDN RWBMT' })
   @IsOptional()
   @IsString()
-  differenceAmberRwbmt?: string;
+  differenceZdnRwbmt?: string;
 
-  @ApiPropertyOptional({ description: 'Difference amber RWBMT percentage' })
+  @ApiPropertyOptional({ description: 'Difference ZDN RWBMT percentage' })
   @IsOptional()
   @IsString()
-  differenceAmberRwbmtPercent?: string;
+  differenceZdnRwbmtPercent?: string;
 
   @ApiPropertyOptional({ description: 'Dip measurement in cm' })
   @IsOptional()
   @IsString()
-  dipCm?: string;
+  dipSm?: string;
 
   @ApiPropertyOptional({ description: 'GOV in liters' })
   @IsOptional()
@@ -81,7 +81,7 @@ export class CreateReportDetailDto {
   @ApiPropertyOptional({ description: 'Water measurement in cm' })
   @IsOptional()
   @IsString()
-  waterCm?: string;
+  waterSm?: string;
 }
 
 export class CreateReportDto {

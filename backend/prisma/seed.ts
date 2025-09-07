@@ -13,6 +13,7 @@ async function main() {
     update: {},
     create: {
       username: 'admin',
+      fullName: 'System Administrator',
       email: 'admin@example.com',
       password: hashedPassword,
       role: 'ADMIN',
@@ -28,6 +29,7 @@ async function main() {
     update: {},
     create: {
       username: 'user',
+      fullName: 'Regular User',
       email: 'user@example.com',
       password: userPassword,
       role: 'USER',
@@ -118,9 +120,9 @@ async function main() {
       actualDensity: 0.8515,
       zdnmt: 61.266,
       densityAt20c: 0.8237,
-      differenceAmberRwbmt: -0.254,
-      differenceAmberRwbmtPercent: -0.4,
-      dipCm: 255.0,
+      differenceZdnRwbmt: -0.254,
+      differenceZdnRwbmtPercent: -0.4,
+      dipSm: 255.0,
       govLiters: 72936,
       rtcNo: '51389831',
       rwbmtGross: 61.520,
@@ -130,7 +132,7 @@ async function main() {
       temperatureC: 21.0,
       type: '106',
       waterLiters: 0,
-      waterCm: 0.0,
+      waterSm: 0.0,
     },
   });
 

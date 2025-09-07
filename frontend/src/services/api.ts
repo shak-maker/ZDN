@@ -40,9 +40,9 @@ export interface ReportDetail {
   actualDensity?: string;
   zdnmt?: string;
   densityAt20c?: string;
-  differenceAmberRwbmt?: string;
-  differenceAmberRwbmtPercent?: string;
-  dipCm?: string;
+  differenceZdnRwbmt?: string;
+  differenceZdnRwbmtPercent?: string;
+  dipSm?: string;
   govLiters?: number;
   rtcNo?: string;
   rwbmtGross?: string;
@@ -52,7 +52,7 @@ export interface ReportDetail {
   temperatureC?: string;
   type?: string;
   waterLiters?: number;
-  waterCm?: string;
+  waterSm?: string;
 }
 
 export interface Report {

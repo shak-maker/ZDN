@@ -8,14 +8,13 @@ import {
   Box,
   Alert,
   Link,
-  Avatar,
 } from '@mui/material';
 import {
-  Assessment as AssessmentIcon,
   Lock as LockIcon,
   Person as PersonIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext-basic';
+import Logo from '../components/Logo';
 
 const Login: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -46,13 +45,24 @@ const Login: React.FC = () => {
     <Box
       sx={{
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        background: 'linear-gradient(135deg, #1e3a8a 0%, #3730a3 50%, #581c87 100%)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         padding: { xs: 2, sm: 3, md: 4 },
         width: '100vw',
         margin: 0,
+        position: 'relative',
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'radial-gradient(circle at 20% 80%, rgba(239, 68, 68, 0.1) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%)',
+          pointerEvents: 'none',
+        },
       }}
     >
       <Box
@@ -69,12 +79,15 @@ const Login: React.FC = () => {
           sx={{
             padding: { xs: 4, sm: 6, md: 8 },
             borderRadius: { xs: 2, sm: 3, md: 4 },
-            background: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
+            background: 'rgba(255, 255, 255, 0.98)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
             width: '100%',
             maxWidth: { xs: '100%', sm: '500px', md: '600px' },
             minHeight: { xs: 'auto', sm: '600px', md: '700px' },
+            position: 'relative',
+            zIndex: 1,
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1)',
           }}
         >
           {/* Logo and Title Section */}
@@ -86,36 +99,17 @@ const Login: React.FC = () => {
               mb: { xs: 3, sm: 4, md: 5 },
             }}
           >
-            <Avatar
+            <Box
               sx={{
-                width: { xs: 60, sm: 80, md: 100 },
-                height: { xs: 60, sm: 80, md: 100 },
                 mb: { xs: 1.5, sm: 2, md: 3 },
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                boxShadow: '0 8px 32px rgba(102, 126, 234, 0.3)',
+                filter: 'drop-shadow(0 8px 32px rgba(239, 68, 68, 0.3))',
               }}
             >
-              <AssessmentIcon sx={{ 
-                fontSize: { xs: 30, sm: 40, md: 50 }, 
-                color: 'white' 
-              }} />
-            </Avatar>
-            <Typography
-              component="h1"
-              variant="h3"
-              sx={{
-                fontWeight: 700,
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                backgroundClip: 'text',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                textAlign: 'center',
-                mb: 1,
-                fontSize: { xs: '1.8rem', sm: '2.2rem', md: '2.5rem' },
-              }}
-            >
-              ZDN
-            </Typography>
+              <Logo 
+                size={150} 
+                variant="gradient"
+              />
+            </Box>
             <Typography
               variant="h6"
               color="text.secondary"
@@ -152,7 +146,7 @@ const Login: React.FC = () => {
               required
               fullWidth
               id="username"
-              label="Username or Email"
+              label="Username"
               name="username"
               autoComplete="username"
               autoFocus
@@ -176,14 +170,14 @@ const Login: React.FC = () => {
                   '&:hover': {
                     backgroundColor: 'rgba(255, 255, 255, 0.9)',
                   },
-                  '&.Mui-focused': {
-                    backgroundColor: 'white',
-                    boxShadow: '0 0 0 2px rgba(102, 126, 234, 0.2)',
-                  },
+                '&.Mui-focused': {
+                  backgroundColor: 'white',
+                  boxShadow: '0 0 0 2px rgba(30, 58, 138, 0.2)',
                 },
-                '& .MuiInputLabel-root.Mui-focused': {
-                  color: '#667eea',
-                },
+              },
+              '& .MuiInputLabel-root.Mui-focused': {
+                color: '#1e3a8a',
+              },
                 '& .MuiInputBase-input': {
                   fontSize: { xs: '1rem', sm: '1.1rem' },
                 },
@@ -220,14 +214,14 @@ const Login: React.FC = () => {
                   '&:hover': {
                     backgroundColor: 'rgba(255, 255, 255, 0.9)',
                   },
-                  '&.Mui-focused': {
-                    backgroundColor: 'white',
-                    boxShadow: '0 0 0 2px rgba(102, 126, 234, 0.2)',
-                  },
+                '&.Mui-focused': {
+                  backgroundColor: 'white',
+                  boxShadow: '0 0 0 2px rgba(30, 58, 138, 0.2)',
                 },
-                '& .MuiInputLabel-root.Mui-focused': {
-                  color: '#667eea',
-                },
+              },
+              '& .MuiInputLabel-root.Mui-focused': {
+                color: '#1e3a8a',
+              },
                 '& .MuiInputBase-input': {
                   fontSize: { xs: '1rem', sm: '1.1rem' },
                 },
@@ -245,15 +239,15 @@ const Login: React.FC = () => {
                 mb: 3,
                 py: { xs: 1.5, sm: 2 },
                 borderRadius: 2,
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                boxShadow: '0 8px 32px rgba(102, 126, 234, 0.3)',
+                background: 'linear-gradient(135deg, #1e3a8a 0%, #3730a3 50%, #581c87 100%)',
+                boxShadow: '0 8px 32px rgba(30, 58, 138, 0.3)',
                 fontSize: { xs: '1rem', sm: '1.1rem', md: '1.2rem' },
                 fontWeight: 600,
                 textTransform: 'none',
                 minHeight: { xs: '48px', sm: '56px' },
                 '&:hover': {
-                  background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
-                  boxShadow: '0 12px 40px rgba(102, 126, 234, 0.4)',
+                  background: 'linear-gradient(135deg, #1e40af 0%, #4338ca 50%, #6b21a8 100%)',
+                  boxShadow: '0 12px 40px rgba(30, 58, 138, 0.4)',
                   transform: 'translateY(-2px)',
                 },
                 '&:active': {

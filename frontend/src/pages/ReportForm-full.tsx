@@ -39,9 +39,9 @@ interface ReportDetail {
   actualDensity?: string;
   zdnmt?: string;
   densityAt20c?: string;
-  differenceAmberRwbmt?: string;
-  differenceAmberRwbmtPercent?: string;
-  dipCm?: string;
+  differenceZdnRwbmt?: string;
+  differenceZdnRwbmtPercent?: string;
+  dipSm?: string;
   govLiters?: number;
   rtcNo?: string;
   rwbmtGross?: string;
@@ -51,7 +51,7 @@ interface ReportDetail {
   temperatureC?: string;
   type?: string;
   waterLiters?: number;
-  waterCm?: string;
+  waterSm?: string;
 }
 
 interface Report {
@@ -177,7 +177,42 @@ const ReportForm: React.FC = () => {
         throw new Error('Failed to fetch report');
       }
 
-      const report: Report = await response.json();
+      const canonicalData: any = await response.json();
+      
+      // Convert canonical format to legacy format for form
+      const report: Report = {
+        contractNo: canonicalData.Hemjilt?.ContractNo,
+        customer: canonicalData.Hemjilt?.Customer,
+        dischargeCommenced: canonicalData.Hemjilt?.DischargeCommenced,
+        dischargeCompleted: canonicalData.Hemjilt?.DischargeCompleted,
+        fullCompleted: canonicalData.Hemjilt?.FullCompleted,
+        handledBy: canonicalData.Hemjilt?.HandledBy,
+        inspector: canonicalData.Inspector,
+        location: canonicalData.Location,
+        object: canonicalData.Object,
+        product: canonicalData.Product,
+        reportDate: canonicalData.ReportDate,
+        reportNo: canonicalData.ReportNo,
+        reportDetails: canonicalData.Hemjilt?.HemjiltDetails?.map((detail: any) => ({
+          actualDensity: detail.ActualDensity,
+          zdnmt: detail.ZDNMT,
+          densityAt20c: detail.DensityAt20c,
+          differenceZdnRwbmt: detail.DifferenceZdnRWBMT,
+          differenceZdnRwbmtPercent: detail.DifferenceZdnRWBMTProcent,
+          dipSm: detail.DipSm,
+          govLiters: parseFloat(detail.GOVLtr) || 0,
+          rtcNo: detail.RTCNo,
+          rwbmtGross: detail.RWBMTGross,
+          rwbNo: detail.RWBNo,
+          sealNo: detail.SealNo,
+          tovLiters: parseFloat(detail.TOVltr) || 0,
+          temperatureC: detail.Temperature,
+          type: detail.Type,
+          waterLiters: parseFloat(detail.WaterLtr) || 0,
+          waterSm: detail.WaterSm,
+        })) || [],
+      };
+      
       setFormData(report);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch report');
@@ -205,9 +240,9 @@ const ReportForm: React.FC = () => {
       actualDensity: '',
       zdnmt: '',
       densityAt20c: '',
-      differenceAmberRwbmt: '',
-      differenceAmberRwbmtPercent: '',
-      dipCm: '',
+      differenceZdnRwbmt: '',
+      differenceZdnRwbmtPercent: '',
+      dipSm: '',
       govLiters: 0,
       rtcNo: '',
       rwbmtGross: '',
@@ -217,7 +252,7 @@ const ReportForm: React.FC = () => {
       temperatureC: '',
       type: '',
       waterLiters: 0,
-      waterCm: '',
+      waterSm: '',
     };
 
     setFormData(prev => ({
@@ -295,9 +330,9 @@ const ReportForm: React.FC = () => {
           ActualDensity: detail.actualDensity || '0',
           ZDNMT: detail.zdnmt || '0',
           DensityAt20c: detail.densityAt20c || '0',
-          DiffrenceAmberRWBMT: detail.differenceAmberRwbmt || '0',
-          DiffrenceAmberRWBMTProcent: detail.differenceAmberRwbmtPercent || '0',
-          DipSm: detail.dipCm || '0',
+          DifferenceZdnRWBMT: detail.differenceZdnRwbmt || '0',
+          DifferenceZdnRWBMTProcent: detail.differenceZdnRwbmtPercent || '0',
+          DipSm: detail.dipSm || '0',
           GOVLtr: detail.govLiters?.toString() || '0',
           RTCNo: detail.rtcNo || '',
           RWBMTGross: detail.rwbmtGross || '0',
@@ -307,7 +342,7 @@ const ReportForm: React.FC = () => {
           Temprature: detail.temperatureC || '0',
           Type: detail.type || '',
           WaterLtr: detail.waterLiters?.toString() || '0',
-          WaterSm: detail.waterCm || '0',
+          WaterSm: detail.waterSm || '0',
         })),
       },
     };
@@ -686,10 +721,15 @@ const ReportForm: React.FC = () => {
                 <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>Actual Density</TableCell>
                 <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>ZDNMT</TableCell>
                 <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>Density @ 20°C</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>Diff Zdn RWBMT</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>Diff Zdn RWBMT %</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>Dip (cm)</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>RWBMT Gross</TableCell>
                 <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>Temperature</TableCell>
                 <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>GOV (L)</TableCell>
                 <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>TOV (L)</TableCell>
                 <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>Water (L)</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>Water (cm)</TableCell>
                 <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>Actions</TableCell>
               </TableRow>
             </TableHead>
@@ -776,6 +816,46 @@ const ReportForm: React.FC = () => {
                     <TextField
                       size="small"
                       type="number"
+                      value={detail.differenceZdnRwbmt || ''}
+                      onChange={(e) => updateDetailField(index, 'differenceZdnRwbmt', e.target.value)}
+                      fullWidth
+                      sx={smallTextFieldStyles}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <TextField
+                      size="small"
+                      type="number"
+                      value={detail.differenceZdnRwbmtPercent || ''}
+                      onChange={(e) => updateDetailField(index, 'differenceZdnRwbmtPercent', e.target.value)}
+                      fullWidth
+                      sx={smallTextFieldStyles}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <TextField
+                      size="small"
+                      type="number"
+                      value={detail.dipSm || ''}
+                      onChange={(e) => updateDetailField(index, 'dipSm', e.target.value)}
+                      fullWidth
+                      sx={smallTextFieldStyles}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <TextField
+                      size="small"
+                      type="number"
+                      value={detail.rwbmtGross || ''}
+                      onChange={(e) => updateDetailField(index, 'rwbmtGross', e.target.value)}
+                      fullWidth
+                      sx={smallTextFieldStyles}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <TextField
+                      size="small"
+                      type="number"
                       value={detail.temperatureC || ''}
                       onChange={(e) => updateDetailField(index, 'temperatureC', e.target.value)}
                       fullWidth
@@ -808,6 +888,16 @@ const ReportForm: React.FC = () => {
                       type="number"
                       value={detail.waterLiters || ''}
                       onChange={(e) => updateDetailField(index, 'waterLiters', parseInt(e.target.value) || 0)}
+                      fullWidth
+                      sx={smallTextFieldStyles}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <TextField
+                      size="small"
+                      type="number"
+                      value={detail.waterSm || ''}
+                      onChange={(e) => updateDetailField(index, 'waterSm', e.target.value)}
                       fullWidth
                       sx={smallTextFieldStyles}
                     />

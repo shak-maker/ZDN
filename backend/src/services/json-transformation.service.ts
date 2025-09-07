@@ -5,7 +5,7 @@ import { CanonicalJsonResponse, Hemjilt, HemjiltDetail } from '../interfaces/can
 @Injectable()
 export class JsonTransformationService {
   transformToCanonicalJson(reportData: CreateReportDto): CanonicalJsonResponse {
-    const now = new Date().toISOString();
+    const now = this.formatDateTime(new Date().toISOString());
     
     const hemjilt: Hemjilt = {
       ContractNo: reportData.contractNo || '',
@@ -14,12 +14,6 @@ export class JsonTransformationService {
       DischargeCompleted: this.formatDateTime(reportData.dischargeCompleted),
       FullCompleted: this.formatDateTime(reportData.fullCompleted),
       HandledBy: reportData.handledBy || '',
-      Inspector: reportData.inspector || '',
-      Location: reportData.location || '',
-      Object: reportData.object || '',
-      Product: reportData.product || '',
-      ReportDate: this.formatDate(reportData.reportDate),
-      ReportNo: reportData.reportNo,
       HemjiltDetails: reportData.reportDetails.map(detail => this.transformDetail(detail))
     };
 
@@ -27,7 +21,13 @@ export class JsonTransformationService {
       Message: '',
       SendDate: now,
       Success: true,
-      Hemjilt: hemjilt
+      Hemjilt: hemjilt,
+      Inspector: reportData.inspector || '',
+      Location: reportData.location || '',
+      Object: reportData.object || '',
+      Product: reportData.product || '',
+      ReportDate: this.formatDateTime(reportData.reportDate),
+      ReportNo: reportData.reportNo
     };
   }
 
@@ -36,19 +36,19 @@ export class JsonTransformationService {
       ActualDensity: detail.actualDensity || '0',
       ZDNMT: detail.zdnmt || '0',
       DensityAt20c: detail.densityAt20c || '0',
-      DiffrenceAmberRWBMT: detail.differenceAmberRwbmt || '0',
-      DiffrenceAmberRWBMTProcent: detail.differenceAmberRwbmtPercent || '0',
-      DipSm: detail.dipCm || '0',
+      DifferenceZdnRWBMT: detail.differenceZdnRwbmt || '0',
+      DifferenceZdnRWBMTProcent: detail.differenceZdnRwbmtPercent || '0',
+      DipSm: detail.dipSm || '0',
       GOVLtr: detail.govLiters?.toString() || '0',
       RTCNo: detail.rtcNo || '',
       RWBMTGross: detail.rwbmtGross || '0',
       RWBNo: detail.rwbNo || '',
       SealNo: detail.sealNo || '',
       TOVltr: detail.tovLiters?.toString() || '0',
-      Temprature: detail.temperatureC || '0',
+      Temperature: detail.temperatureC || '0',
       Type: detail.type || '',
       WaterLtr: detail.waterLiters?.toString() || '0',
-      WaterSm: detail.waterCm || '0'
+      WaterSm: detail.waterSm || '0'
     };
   }
 
@@ -77,7 +77,7 @@ export class JsonTransformationService {
   createErrorResponse(message: string): CanonicalJsonResponse {
     return {
       Message: message,
-      SendDate: new Date().toISOString(),
+      SendDate: this.formatDateTime(new Date().toISOString()),
       Success: false,
       Hemjilt: {
         ContractNo: '',
@@ -86,14 +86,14 @@ export class JsonTransformationService {
         DischargeCompleted: '',
         FullCompleted: '',
         HandledBy: '',
-        Inspector: '',
-        Location: '',
-        Object: '',
-        Product: '',
-        ReportDate: '',
-        ReportNo: '',
         HemjiltDetails: []
-      }
+      },
+      Inspector: '',
+      Location: '',
+      Object: '',
+      Product: '',
+      ReportDate: '',
+      ReportNo: ''
     };
   }
 }

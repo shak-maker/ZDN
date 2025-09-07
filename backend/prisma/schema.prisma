@@ -36,9 +36,9 @@ model ReportDetail {
   actualDensity               Float?  @map("actual_density")
   zdnmt                       Float?
   densityAt20c                Float?  @map("density_at_20c")
-  differenceAmberRwbmt        Float?  @map("difference_amber_rwbmt")
-  differenceAmberRwbmtPercent Float?  @map("difference_amber_rwbmt_percent")
-  dipCm                       Float?  @map("dip_cm")
+  differenceZdnRwbmt          Float?  @map("difference_zdn_rwbmt")
+  differenceZdnRwbmtPercent   Float?  @map("difference_zdn_rwbmt_percent")
+  dipSm                       Float?  @map("dip_sm")
   govLiters                   Int?    @map("gov_liters")
   rtcNo                       String? @map("rtc_no")
   rwbmtGross                  Float?  @map("rwbmt_gross")
@@ -48,7 +48,7 @@ model ReportDetail {
   temperatureC                Float?  @map("temperature_c")
   type                        String?
   waterLiters                 Int?    @map("water_liters")
-  waterCm                     Float?  @map("water_cm")
+  waterSm                     Float?  @map("water_sm")
   report                      Report  @relation(fields: [reportId], references: [id], onDelete: Cascade)
 
   @@index([reportId], map: "report_details_report_id_fkey")
@@ -58,7 +58,8 @@ model ReportDetail {
 model User {
   id        Int        @id @default(autoincrement())
   username  String     @unique
-  email     String     @unique
+  fullName  String?    @map("full_name")
+  email     String?    @unique
   password  String
   role      UserRole   @default(USER)
   isActive  Boolean    @default(true) @map("is_active")

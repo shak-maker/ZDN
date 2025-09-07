@@ -26,6 +26,7 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
 } from '@mui/icons-material';
+import Logo from '../components/Logo';
 
 interface ReportDetail {
   id?: number;
@@ -211,50 +212,62 @@ const ReportsList: React.FC = () => {
           gap: { xs: 2, sm: 0 },
         }}
       >
-        <Box>
-          <Typography 
-            variant="h3" 
-            component="h1"
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Box
             sx={{
-              fontWeight: 700,
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              backgroundClip: 'text',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              fontSize: { xs: '1.8rem', sm: '2.2rem', md: '2.5rem' },
+              filter: 'drop-shadow(0 4px 8px rgba(239, 68, 68, 0.2))',
             }}
           >
-            Measurement Reports
-          </Typography>
-          <Typography 
-            variant="h6" 
-            color="text.secondary"
-            sx={{ 
-              fontWeight: 400,
-              fontSize: { xs: '0.9rem', sm: '1rem', md: '1.1rem' },
-            }}
-          >
-            Professional report management system
-          </Typography>
-          <Typography 
-            variant="caption" 
-            color="text.secondary"
-            sx={{ 
-              fontSize: { xs: '0.7rem', sm: '0.8rem' },
-              mt: 1,
-              display: 'block',
-            }}
-          >
-            💡 Keyboard shortcuts: Ctrl+N (New Report), Ctrl+F (Search)
-          </Typography>
+            <Logo 
+              size={100} 
+              variant="gradient"
+            />
+          </Box>
+          <Box>
+            <Typography 
+              variant="h3" 
+              component="h1"
+              sx={{
+                fontWeight: 700,
+                background: 'linear-gradient(135deg, #1e3a8a 0%, #3730a3 50%, #581c87 100%)',
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                fontSize: { xs: '1.8rem', sm: '2.2rem', md: '2.5rem' },
+              }}
+            >
+              Measurement Reports
+            </Typography>
+            <Typography 
+              variant="h6" 
+              color="text.secondary"
+              sx={{ 
+                fontWeight: 400,
+                fontSize: { xs: '0.9rem', sm: '1rem', md: '1.1rem' },
+              }}
+            >
+              Professional report management system
+            </Typography>
+            <Typography 
+              variant="caption" 
+              color="text.secondary"
+              sx={{ 
+                fontSize: { xs: '0.7rem', sm: '0.8rem' },
+                mt: 1,
+                display: 'block',
+              }}
+            >
+              💡 Keyboard shortcuts: Ctrl+N (New Report), Ctrl+F (Search)
+            </Typography>
+          </Box>
         </Box>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => navigate('/reports/new')}
           sx={{
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            boxShadow: '0 8px 32px rgba(102, 126, 234, 0.3)',
+            background: 'linear-gradient(135deg, #1e3a8a 0%, #3730a3 50%, #581c87 100%)',
+            boxShadow: '0 8px 32px rgba(30, 58, 138, 0.3)',
             borderRadius: 2,
             px: 3,
             py: 1.5,
@@ -262,8 +275,8 @@ const ReportsList: React.FC = () => {
             fontWeight: 600,
             textTransform: 'none',
             '&:hover': {
-              background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
-              boxShadow: '0 12px 40px rgba(102, 126, 234, 0.4)',
+              background: 'linear-gradient(135deg, #1e40af 0%, #4338ca 50%, #6b21a8 100%)',
+              boxShadow: '0 12px 40px rgba(30, 58, 138, 0.4)',
               transform: 'translateY(-2px)',
             },
             transition: 'all 0.3s ease',
@@ -299,7 +312,7 @@ const ReportsList: React.FC = () => {
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <SearchIcon sx={{ color: '#667eea' }} />
+                  <SearchIcon sx={{ color: '#1e3a8a' }} />
                 </InputAdornment>
               ),
             }}
@@ -312,11 +325,11 @@ const ReportsList: React.FC = () => {
                 },
                 '&.Mui-focused': {
                   backgroundColor: 'white',
-                  boxShadow: '0 0 0 2px rgba(102, 126, 234, 0.2)',
+                  boxShadow: '0 0 0 2px rgba(30, 58, 138, 0.2)',
                 },
               },
               '& .MuiInputLabel-root.Mui-focused': {
-                color: '#667eea',
+                color: '#1e3a8a',
               },
             }}
           />
@@ -335,14 +348,14 @@ const ReportsList: React.FC = () => {
       >
         <Table>
           <TableHead>
-            <TableRow sx={{ backgroundColor: 'rgba(102, 126, 234, 0.05)' }}>
-              <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>Report No</TableCell>
-              <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>Customer</TableCell>
-              <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>Inspector</TableCell>
-              <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>Product</TableCell>
-              <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>Report Date</TableCell>
-              <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>Details Count</TableCell>
-              <TableCell align="right" sx={{ fontWeight: 600, color: '#667eea' }}>Actions</TableCell>
+            <TableRow sx={{ backgroundColor: 'rgba(30, 58, 138, 0.05)' }}>
+              <TableCell sx={{ fontWeight: 600, color: '#1e3a8a' }}>Report No</TableCell>
+              <TableCell sx={{ fontWeight: 600, color: '#1e3a8a' }}>Customer</TableCell>
+              <TableCell sx={{ fontWeight: 600, color: '#1e3a8a' }}>Inspector</TableCell>
+              <TableCell sx={{ fontWeight: 600, color: '#1e3a8a' }}>Product</TableCell>
+              <TableCell sx={{ fontWeight: 600, color: '#1e3a8a' }}>Report Date</TableCell>
+              <TableCell sx={{ fontWeight: 600, color: '#1e3a8a' }}>Details Count</TableCell>
+              <TableCell align="right" sx={{ fontWeight: 600, color: '#1e3a8a' }}>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -352,10 +365,10 @@ const ReportsList: React.FC = () => {
                 hover
                 sx={{ 
                   '&:nth-of-type(odd)': {
-                    backgroundColor: 'rgba(102, 126, 234, 0.02)',
+                    backgroundColor: 'rgba(30, 58, 138, 0.02)',
                   },
                   '&:hover': {
-                    backgroundColor: 'rgba(102, 126, 234, 0.08)',
+                    backgroundColor: 'rgba(30, 58, 138, 0.08)',
                     transform: 'scale(1.01)',
                     transition: 'all 0.2s ease',
                   },
@@ -365,7 +378,7 @@ const ReportsList: React.FC = () => {
                   <Typography 
                     variant="body2" 
                     fontWeight="600"
-                    sx={{ color: '#667eea' }}
+                    sx={{ color: '#1e3a8a' }}
                   >
                     {report.reportNo}
                   </Typography>
@@ -387,10 +400,10 @@ const ReportsList: React.FC = () => {
                       size="small" 
                       variant="outlined"
                       sx={{
-                        borderColor: '#667eea',
-                        color: '#667eea',
+                        borderColor: '#1e3a8a',
+                        color: '#1e3a8a',
                         '&:hover': {
-                          backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                          backgroundColor: 'rgba(30, 58, 138, 0.1)',
                         },
                       }}
                     />
@@ -406,8 +419,8 @@ const ReportsList: React.FC = () => {
                     label={report.reportDetails?.length || 0}
                     size="small"
                     sx={{
-                      backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                      color: '#667eea',
+                      backgroundColor: 'rgba(30, 58, 138, 0.1)',
+                      color: '#1e3a8a',
                       fontWeight: 600,
                     }}
                   />
@@ -418,9 +431,9 @@ const ReportsList: React.FC = () => {
                     onClick={() => navigate(`/reports/${report.id}`)}
                     title="View"
                     sx={{
-                      color: '#667eea',
+                      color: '#1e3a8a',
                       '&:hover': {
-                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        backgroundColor: 'rgba(30, 58, 138, 0.1)',
                       },
                     }}
                   >
@@ -431,9 +444,9 @@ const ReportsList: React.FC = () => {
                     onClick={() => navigate(`/reports/${report.id}/edit`)}
                     title="Edit"
                     sx={{
-                      color: '#667eea',
+                      color: '#1e3a8a',
                       '&:hover': {
-                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        backgroundColor: 'rgba(30, 58, 138, 0.1)',
                       },
                     }}
                   >
@@ -483,11 +496,11 @@ const ReportsList: React.FC = () => {
             startIcon={<AddIcon />}
             onClick={() => navigate('/reports/new')}
             sx={{
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              boxShadow: '0 8px 32px rgba(102, 126, 234, 0.3)',
+              background: 'linear-gradient(135deg, #1e3a8a 0%, #3730a3 50%, #581c87 100%)',
+              boxShadow: '0 8px 32px rgba(30, 58, 138, 0.3)',
               '&:hover': {
-                background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
-                boxShadow: '0 12px 40px rgba(102, 126, 234, 0.4)',
+                background: 'linear-gradient(135deg, #1e40af 0%, #4338ca 50%, #6b21a8 100%)',
+                boxShadow: '0 12px 40px rgba(30, 58, 138, 0.4)',
                 transform: 'translateY(-2px)',
               },
               transition: 'all 0.3s ease',
@@ -518,17 +531,17 @@ const ReportsList: React.FC = () => {
           onRowsPerPageChange={handleChangeRowsPerPage}
           sx={{
             '& .MuiTablePagination-toolbar': {
-              color: '#667eea',
+              color: '#1e3a8a',
               fontWeight: 600,
             },
             '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': {
-              color: '#667eea',
+              color: '#1e3a8a',
               fontWeight: 600,
             },
             '& .MuiIconButton-root': {
-              color: '#667eea',
+              color: '#1e3a8a',
               '&:hover': {
-                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                backgroundColor: 'rgba(30, 58, 138, 0.1)',
               },
             },
           }}
