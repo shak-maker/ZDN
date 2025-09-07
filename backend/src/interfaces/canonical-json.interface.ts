@@ -38,4 +38,5 @@ export interface CanonicalJsonResponse {
   SendDate: string;
   Success: boolean;
   Hemjilt: Hemjilt;
+  [key: string]: any; // Add index signature for Prisma compatibility
 }

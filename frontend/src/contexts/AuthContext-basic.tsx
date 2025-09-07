@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { authApi } from '../services/api';
 
 interface User {
   id: number;
@@ -10,7 +11,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (username: string, password: string) => void;
+  login: (username: string, password: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -60,23 +61,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     console.log('AuthContext: User state changed:', user);
   }, [user]);
 
-  const login = (username: string, password: string) => {
+  const login = async (username: string, password: string) => {
     console.log('AuthContext login called:', { username, password });
     
-    if ((username === 'admin' && password === 'admin123') || 
-        (username === 'user' && password === 'user123')) {
-      const userData = {
-        id: 1,
-        username,
-        email: `${username}@example.com`,
-        role: username === 'admin' ? 'ADMIN' : 'USER'
-      };
+    try {
+      const response = await authApi.login(username, password);
+      const { access_token, user: userData } = response.data;
       
-      localStorage.setItem('token', 'mock-jwt-token');
+      localStorage.setItem('token', access_token);
       localStorage.setItem('user', JSON.stringify(userData));
       setUser(userData);
       console.log('User set in context:', userData);
-    } else {
+    } catch (error) {
+      console.error('Login error:', error);
       throw new Error('Invalid credentials');
     }
   };

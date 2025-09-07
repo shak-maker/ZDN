@@ -31,7 +31,7 @@ const Login: React.FC = () => {
     setLoading(true);
 
     try {
-      login(username, password);
+      await login(username, password);
       console.log('Login successful, navigating to /reports...');
       navigate('/reports');
     } catch (error) {

@@ -42,7 +42,7 @@ export class ReportsService {
           product: createReportDto.product,
           reportDate: createReportDto.reportDate ? new Date(createReportDto.reportDate) : null,
           reportNo: createReportDto.reportNo,
-          jsonData: canonicalJson,
+          jsonData: canonicalJson as any,
         },
       });
 
@@ -152,7 +152,7 @@ export class ReportsService {
       return this.jsonTransformation.createErrorResponse('Report not found');
     }
 
-    return report.jsonData as CanonicalJsonResponse;
+    return report.jsonData as unknown as CanonicalJsonResponse;
   }
 
   async update(id: number, updateReportDto: UpdateReportDto) {
@@ -192,7 +192,7 @@ export class ReportsService {
           product: updateReportDto.product,
           reportDate: updateReportDto.reportDate ? new Date(updateReportDto.reportDate) : undefined,
           reportNo: updateReportDto.reportNo,
-          jsonData: canonicalJson,
+          jsonData: canonicalJson as any,
         },
       });
 

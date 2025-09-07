@@ -95,7 +95,7 @@ const ReportsList: React.FC = () => {
             break;
           case 'f':
             event.preventDefault();
-            document.querySelector('input[placeholder*="Search"]')?.focus();
+            (document.querySelector('input[placeholder*="Search"]') as HTMLInputElement)?.focus();
             break;
         }
       }
@@ -165,7 +165,7 @@ const ReportsList: React.FC = () => {
     }
   };
 
-  const handleChangePage = (event: unknown, newPage: number) => {
+  const handleChangePage = (_event: unknown, newPage: number) => {
     setPage(newPage);
   };
 
@@ -346,7 +346,7 @@ const ReportsList: React.FC = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {reports.map((report, index) => (
+            {reports.map((report) => (
               <TableRow 
                 key={report.id} 
                 hover
