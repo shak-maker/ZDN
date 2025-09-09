@@ -1,0 +1,29 @@
+---
+# Simple cPanel Git Version Control Deployment
+# This is a simplified version for basic deployment
+
+deployment:
+  tasks:
+    # Set deployment path (replace 'yourusername' with your actual cPanel username)
+    - export DEPLOYPATH=/home/yourusername/public_html/
+    
+    # Build and deploy frontend
+    - cd frontend && npm ci && npm run build
+    - /bin/cp -R frontend/dist/* $DEPLOYPATH/
+    
+    # Build and deploy backend
+    - cd ../backend && npm ci && npm run build
+    - mkdir -p $DEPLOYPATH/api
+    - /bin/cp -R backend/dist/* $DEPLOYPATH/api/
+    - /bin/cp backend/package.json $DEPLOYPATH/api/
+    - /bin/cp backend/env.production $DEPLOYPATH/api/.env
+    
+    # Deploy database files
+    - /bin/cp -R backend/prisma $DEPLOYPATH/api/
+    
+    # Install backend dependencies
+    - cd $DEPLOYPATH/api && npm install --production
+    
+    # Set permissions
+    - find $DEPLOYPATH -type f -exec chmod 644 {} \;
+    - find $DEPLOYPATH -type d -exec chmod 755 {} \;

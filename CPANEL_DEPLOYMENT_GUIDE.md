@@ -1,17 +1,53 @@
 # cPanel Deployment Guide
 
-This guide explains how to deploy your ZDN application to cPanel hosting using the `.cpanel.yml` configuration file.
+This guide explains how to deploy your ZDN application to cPanel hosting using multiple deployment methods.
 
 ## 📋 Prerequisites
 
 - cPanel hosting account with Node.js support
 - MySQL database access
+- Git Version Control enabled in cPanel (for automatic deployment)
 - File Manager access in cPanel
-- SSH access (recommended) or File Manager upload
 
-## 🚀 Quick Deployment
+## 🚀 Deployment Methods
 
-### Option 1: Automated Script (Recommended)
+### Option 1: cPanel Git Version Control (Recommended)
+
+This is the easiest method using cPanel's built-in Git deployment feature.
+
+#### Setup Steps:
+
+1. **Enable Git Version Control in cPanel:**
+   - Go to "Git™ Version Control" in cPanel
+   - Click "Create" to create a new repository
+   - Set repository name (e.g., `zdn-app`)
+   - Set clone URL to your GitHub repository
+   - Enable "Deploy" option
+
+2. **Configure Deployment:**
+   - The `.cpanel.yml` file is already configured
+   - **Important:** Update line 8 in `.cpanel.yml`:
+     ```yaml
+     - export DEPLOYPATH=/home/YOUR_USERNAME/public_html/
+     ```
+     Replace `YOUR_USERNAME` with your actual cPanel username
+
+3. **Deploy:**
+   - Push changes to your GitHub repository
+   - cPanel will automatically detect the push
+   - Go to "Git™ Version Control" → "Deploy" to trigger deployment
+   - Or set up automatic deployment on push
+
+#### What Gets Deployed:
+- ✅ Frontend React app (built automatically)
+- ✅ Backend NestJS API (built automatically)
+- ✅ Database schema and migrations
+- ✅ Environment configuration
+- ✅ .htaccess files for routing
+- ✅ Proper file permissions
+- ✅ Backend dependencies installation
+
+### Option 2: Automated Script
 
 ```bash
 # Run the automated deployment script
@@ -24,7 +60,7 @@ This script will:
 3. Generate necessary configuration files
 4. Create a deployment archive
 
-### Option 2: Manual Deployment
+### Option 3: Manual Deployment
 
 1. **Build the applications:**
    ```bash

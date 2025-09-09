@@ -1,169 +1,125 @@
 ---
-# cPanel Deployment Configuration
-# This file configures the deployment process for cPanel hosting
+# cPanel Git Version Control Deployment Configuration
+# This file configures automatic deployment for cPanel hosting
 
-# Deployment settings
 deployment:
-  # Source directory (where the built files are located)
-  source: "dist"
-  
-  # Target directory on cPanel (relative to public_html)
-  target: "public_html"
-  
-  # Files to exclude from deployment
-  exclude:
-    - "node_modules"
-    - ".git"
-    - ".gitignore"
-    - "*.log"
-    - ".env"
-    - "*.md"
-    - "src"
-    - "test"
-    - "scripts"
-    - "backend"
-    - "frontend"
-    - "package.json"
-    - "package-lock.json"
-    - "tsconfig.json"
-    - "vite.config.ts"
-    - "eslint.config.js"
-    - "eslint.config.mjs"
-    - "nest-cli.json"
-    - "ecosystem.config.js"
-    - "simple-server.js"
-    - "manage-users.js"
-    - "setup.sh"
-    - "prisma"
-    - "test"
-    - "*.spec.ts"
-    - "*.e2e-spec.ts"
-    - "jest-e2e.json"
-    - "tsconfig.build.json"
-    - "tsconfig.build.tsbuildinfo"
-
-# Build configuration
-build:
-  # Frontend build command
-  frontend:
-    command: "npm run build"
-    directory: "frontend"
-    output: "frontend/dist"
-  
-  # Backend build command
-  backend:
-    command: "npm run build"
-    directory: "backend"
-    output: "backend/dist"
-
-# Database configuration
-database:
-  # MySQL configuration for cPanel
-  provider: "mysql"
-  host: "localhost"
-  port: 3306
-  # Database credentials should be set in .env file on cPanel
-  
-# Environment variables
-environment:
-  # Production environment file
-  file: "env.production"
-  
-  # Required environment variables
-  required:
-    - "DATABASE_URL"
-    - "JWT_SECRET"
-    - "API_KEY_SECRET"
-    - "NODE_ENV"
-
-# Deployment steps
-steps:
-  1: "Build frontend application"
-  2: "Build backend application"
-  3: "Upload files to cPanel"
-  4: "Set up database connection"
-  5: "Run database migrations"
-  6: "Configure environment variables"
-  7: "Start application"
-
-# cPanel specific settings
-cpanel:
-  # File manager settings
-  file_manager:
-    enabled: true
-    auto_backup: true
-  
-  # Database settings
-  database:
-    auto_create: false
-    charset: "utf8mb4"
-    collation: "utf8mb4_unicode_ci"
-  
-  # SSL settings
-  ssl:
-    auto_redirect: true
-    force_https: true
-  
-  # Cron jobs (if needed)
-  cron_jobs:
-    - name: "Database backup"
-      schedule: "0 2 * * *"
-      command: "node scripts/cpanel-backup.sh"
-  
-  # Subdomain settings (if applicable)
-  subdomain:
-    enabled: false
-    name: "api"
-    document_root: "public_html/api"
-
-# Post-deployment tasks
-post_deployment:
-  - "Verify database connection"
-  - "Test API endpoints"
-  - "Check frontend functionality"
-  - "Verify file permissions"
-  - "Test external API access"
-
-# Rollback configuration
-rollback:
-  enabled: true
-  backup_directory: "backups"
-  keep_backups: 5
-  auto_rollback_on_error: true
-
-# Monitoring
-monitoring:
-  health_check_url: "/api/health"
-  uptime_check: true
-  error_logging: true
-  performance_monitoring: true
-
-# Security settings
-security:
-  hide_dot_files: true
-  disable_directory_browsing: true
-  set_proper_permissions: true
-  enable_cors: true
-  cors_origins:
-    - "https://yourdomain.com"
-    - "https://www.yourdomain.com"
-
-# Backup settings
-backup:
-  enabled: true
-  frequency: "daily"
-  retention_days: 30
-  include_database: true
-  include_files: true
-  compression: true
-
-# Notifications
-notifications:
-  email:
-    enabled: true
-    on_success: true
-    on_failure: true
-    on_rollback: true
-  webhook:
-    enabled: false
-    url: ""
+  tasks:
+    # Set deployment path (replace 'yourusername' with your actual cPanel username)
+    - export DEPLOYPATH=/home/yourusername/public_html/
+    
+    # Build frontend application
+    - cd frontend && npm ci && npm run build
+    - cd ..
+    
+    # Build backend application  
+    - cd backend && npm ci && npm run build
+    - cd ..
+    
+    # Create necessary directories
+    - mkdir -p $DEPLOYPATH/api
+    - mkdir -p $DEPLOYPATH/scripts
+    - mkdir -p $DEPLOYPATH/backups
+    
+    # Deploy frontend files
+    - /bin/cp -R frontend/dist/* $DEPLOYPATH/
+    
+    # Deploy backend files
+    - /bin/cp -R backend/dist/* $DEPLOYPATH/api/
+    - /bin/cp backend/package.json $DEPLOYPATH/api/
+    - /bin/cp backend/ecosystem.config.js $DEPLOYPATH/api/
+    - /bin/cp backend/env.production $DEPLOYPATH/api/.env
+    
+    # Deploy database files
+    - /bin/cp -R backend/prisma $DEPLOYPATH/api/
+    
+    # Deploy scripts
+    - /bin/cp scripts/cpanel-backup.sh $DEPLOYPATH/scripts/
+    - /bin/cp scripts/cpanel-deploy.sh $DEPLOYPATH/scripts/
+    - chmod +x $DEPLOYPATH/scripts/*.sh
+    
+    # Deploy documentation
+    - /bin/cp README.md $DEPLOYPATH/
+    - /bin/cp PRODUCTION_README.md $DEPLOYPATH/
+    - /bin/cp CPANEL_DEPLOYMENT.md $DEPLOYPATH/
+    - /bin/cp CPANEL_DEPLOYMENT_GUIDE.md $DEPLOYPATH/
+    
+    # Create .htaccess for frontend routing
+    - cat > $DEPLOYPATH/.htaccess << 'EOF'
+    # Frontend routing
+    RewriteEngine On
+    RewriteBase /
+    
+    # Handle React routing
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ /index.html [QSA,L]
+    
+    # Security headers
+    Header always set X-Content-Type-Options nosniff
+    Header always set X-Frame-Options DENY
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    
+    # Cache static assets
+    <FilesMatch "\.(css|js|png|jpg|jpeg|gif|ico|svg)$">
+        ExpiresActive On
+        ExpiresDefault "access plus 1 month"
+    </FilesMatch>
+    EOF
+    
+    # Create .htaccess for API routing
+    - cat > $DEPLOYPATH/api/.htaccess << 'EOF'
+    # API routing
+    RewriteEngine On
+    RewriteBase /api/
+    
+    # Handle API routes
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ /api/main.js [QSA,L]
+    
+    # CORS headers
+    Header always set Access-Control-Allow-Origin "*"
+    Header always set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+    Header always set Access-Control-Allow-Headers "Content-Type, Authorization, X-API-Key"
+    
+    # Handle preflight requests
+    RewriteCond %{REQUEST_METHOD} OPTIONS
+    RewriteRule ^(.*)$ $1 [R=200,L]
+    EOF
+    
+    # Set proper file permissions
+    - find $DEPLOYPATH -type f -exec chmod 644 {} \;
+    - find $DEPLOYPATH -type d -exec chmod 755 {} \;
+    - chmod 755 $DEPLOYPATH/scripts/*.sh
+    
+    # Install backend dependencies
+    - cd $DEPLOYPATH/api && npm install --production
+    
+    # Run database migrations
+    - cd $DEPLOYPATH/api && npx prisma migrate deploy
+    - cd $DEPLOYPATH/api && npx prisma generate
+    
+    # Create deployment info file
+    - cat > $DEPLOYPATH/DEPLOYMENT_INFO.txt << EOF
+    Deployment Information
+    =====================
+    Timestamp: $(date)
+    Git Commit: $(git rev-parse HEAD)
+    Git Branch: $(git branch --show-current)
+    
+    Files Deployed:
+    - Frontend: React application
+    - Backend: NestJS API
+    - Database: Prisma schema and migrations
+    - Scripts: Backup and maintenance scripts
+    - Documentation: User and deployment guides
+    
+    Next Steps:
+    1. Verify database connection in .env file
+    2. Test the application
+    3. Configure SSL if needed
+    EOF
+    
+    # Log deployment completion
+    - echo "Deployment completed successfully at $(date)" >> $DEPLOYPATH/deployment.log
