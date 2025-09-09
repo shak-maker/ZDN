@@ -1,0 +1,169 @@
+---
+# cPanel Deployment Configuration
+# This file configures the deployment process for cPanel hosting
+
+# Deployment settings
+deployment:
+  # Source directory (where the built files are located)
+  source: "dist"
+  
+  # Target directory on cPanel (relative to public_html)
+  target: "public_html"
+  
+  # Files to exclude from deployment
+  exclude:
+    - "node_modules"
+    - ".git"
+    - ".gitignore"
+    - "*.log"
+    - ".env"
+    - "*.md"
+    - "src"
+    - "test"
+    - "scripts"
+    - "backend"
+    - "frontend"
+    - "package.json"
+    - "package-lock.json"
+    - "tsconfig.json"
+    - "vite.config.ts"
+    - "eslint.config.js"
+    - "eslint.config.mjs"
+    - "nest-cli.json"
+    - "ecosystem.config.js"
+    - "simple-server.js"
+    - "manage-users.js"
+    - "setup.sh"
+    - "prisma"
+    - "test"
+    - "*.spec.ts"
+    - "*.e2e-spec.ts"
+    - "jest-e2e.json"
+    - "tsconfig.build.json"
+    - "tsconfig.build.tsbuildinfo"
+
+# Build configuration
+build:
+  # Frontend build command
+  frontend:
+    command: "npm run build"
+    directory: "frontend"
+    output: "frontend/dist"
+  
+  # Backend build command
+  backend:
+    command: "npm run build"
+    directory: "backend"
+    output: "backend/dist"
+
+# Database configuration
+database:
+  # MySQL configuration for cPanel
+  provider: "mysql"
+  host: "localhost"
+  port: 3306
+  # Database credentials should be set in .env file on cPanel
+  
+# Environment variables
+environment:
+  # Production environment file
+  file: "env.production"
+  
+  # Required environment variables
+  required:
+    - "DATABASE_URL"
+    - "JWT_SECRET"
+    - "API_KEY_SECRET"
+    - "NODE_ENV"
+
+# Deployment steps
+steps:
+  1: "Build frontend application"
+  2: "Build backend application"
+  3: "Upload files to cPanel"
+  4: "Set up database connection"
+  5: "Run database migrations"
+  6: "Configure environment variables"
+  7: "Start application"
+
+# cPanel specific settings
+cpanel:
+  # File manager settings
+  file_manager:
+    enabled: true
+    auto_backup: true
+  
+  # Database settings
+  database:
+    auto_create: false
+    charset: "utf8mb4"
+    collation: "utf8mb4_unicode_ci"
+  
+  # SSL settings
+  ssl:
+    auto_redirect: true
+    force_https: true
+  
+  # Cron jobs (if needed)
+  cron_jobs:
+    - name: "Database backup"
+      schedule: "0 2 * * *"
+      command: "node scripts/cpanel-backup.sh"
+  
+  # Subdomain settings (if applicable)
+  subdomain:
+    enabled: false
+    name: "api"
+    document_root: "public_html/api"
+
+# Post-deployment tasks
+post_deployment:
+  - "Verify database connection"
+  - "Test API endpoints"
+  - "Check frontend functionality"
+  - "Verify file permissions"
+  - "Test external API access"
+
+# Rollback configuration
+rollback:
+  enabled: true
+  backup_directory: "backups"
+  keep_backups: 5
+  auto_rollback_on_error: true
+
+# Monitoring
+monitoring:
+  health_check_url: "/api/health"
+  uptime_check: true
+  error_logging: true
+  performance_monitoring: true
+
+# Security settings
+security:
+  hide_dot_files: true
+  disable_directory_browsing: true
+  set_proper_permissions: true
+  enable_cors: true
+  cors_origins:
+    - "https://yourdomain.com"
+    - "https://www.yourdomain.com"
+
+# Backup settings
+backup:
+  enabled: true
+  frequency: "daily"
+  retention_days: 30
+  include_database: true
+  include_files: true
+  compression: true
+
+# Notifications
+notifications:
+  email:
+    enabled: true
+    on_success: true
+    on_failure: true
+    on_rollback: true
+  webhook:
+    enabled: false
+    url: ""
