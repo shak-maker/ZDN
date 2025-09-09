@@ -4,8 +4,8 @@
 
 deployment:
   tasks:
-    # Set deployment path (replace 'yourusername' with your actual cPanel username)
-    - export DEPLOYPATH=/home/yourusername/public_html/
+    # Set deployment path for report.zdn.mn subdomain
+    - export DEPLOYPATH=/home/yourusername/report.zdn.mn/
     
     # Build and deploy frontend
     - cd frontend && npm ci && npm run build

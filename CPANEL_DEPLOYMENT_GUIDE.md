@@ -25,10 +25,10 @@ This is the easiest method using cPanel's built-in Git deployment feature.
    - Enable "Deploy" option
 
 2. **Configure Deployment:**
-   - The `.cpanel.yml` file is already configured
+   - The `.cpanel.yml` file is already configured for `report.zdn.mn` subdomain
    - **Important:** Update line 8 in `.cpanel.yml`:
      ```yaml
-     - export DEPLOYPATH=/home/YOUR_USERNAME/public_html/
+     - export DEPLOYPATH=/home/YOUR_USERNAME/report.zdn.mn/
      ```
      Replace `YOUR_USERNAME` with your actual cPanel username
 
@@ -46,6 +46,12 @@ This is the easiest method using cPanel's built-in Git deployment feature.
 - ✅ .htaccess files for routing
 - ✅ Proper file permissions
 - ✅ Backend dependencies installation
+
+#### Subdomain Configuration:
+- **Domain:** `report.zdn.mn`
+- **Document Root:** `/home/yourusername/report.zdn.mn/`
+- **Frontend URL:** `https://report.zdn.mn/`
+- **API URL:** `https://report.zdn.mn/api/`
 
 ### Option 2: Automated Script
 
