@@ -5,7 +5,7 @@
 deployment:
   tasks:
     # Set deployment path for report.zdn.mn subdomain
-    - export DEPLOYPATH=/home/yourusername/report.zdn.mn/
+    - export DEPLOYPATH=/home/zdnmnkw5/report.zdn.mn/
     
     # Build frontend application
     - cd frontend && npm ci && npm run build

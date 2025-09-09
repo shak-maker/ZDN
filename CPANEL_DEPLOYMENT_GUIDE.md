@@ -26,11 +26,8 @@ This is the easiest method using cPanel's built-in Git deployment feature.
 
 2. **Configure Deployment:**
    - The `.cpanel.yml` file is already configured for `report.zdn.mn` subdomain
-   - **Important:** Update line 8 in `.cpanel.yml`:
-     ```yaml
-     - export DEPLOYPATH=/home/YOUR_USERNAME/report.zdn.mn/
-     ```
-     Replace `YOUR_USERNAME` with your actual cPanel username
+   - **Username:** `zdnmnkw5` (already configured)
+   - **Deployment Path:** `/home/zdnmnkw5/report.zdn.mn/`
 
 3. **Deploy:**
    - Push changes to your GitHub repository
@@ -49,7 +46,7 @@ This is the easiest method using cPanel's built-in Git deployment feature.
 
 #### Subdomain Configuration:
 - **Domain:** `report.zdn.mn`
-- **Document Root:** `/home/yourusername/report.zdn.mn/`
+- **Document Root:** `/home/zdnmnkw5/report.zdn.mn/`
 - **Frontend URL:** `https://report.zdn.mn/`
 - **API URL:** `https://report.zdn.mn/api/`
 
