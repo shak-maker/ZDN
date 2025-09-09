@@ -25,18 +25,18 @@ export interface Hemjilt {
   FullCompleted: string;
   HandledBy: string;
   HemjiltDetails: HemjiltDetail[];
-}
-
-export interface CanonicalJsonResponse {
-  Message: string;
-  SendDate: string;
-  Success: boolean;
-  Hemjilt: Hemjilt;
   Inspector: string;
   Location: string;
   Object: string;
   Product: string;
   ReportDate: string;
   ReportNo: string;
+}
+
+export interface CanonicalJsonResponse {
+  Message: string;
+  SendDate: string;
+  Success: string;
+  Hemjilt: Hemjilt;
   [key: string]: any; // Add index signature for Prisma compatibility
 }

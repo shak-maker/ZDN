@@ -31,7 +31,6 @@ import {
   Preview as PreviewIcon,
 } from '@mui/icons-material';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs, { Dayjs } from 'dayjs';
 
 interface ReportDetail {
@@ -101,6 +100,25 @@ const ReportForm: React.FC = () => {
   const smallTextFieldStyles = {
     '& .MuiOutlinedInput-root': {
       borderRadius: 1,
+      minWidth: '120px', // Increased minimum width for better visibility
+      '&:hover': {
+        '& .MuiOutlinedInput-notchedOutline': {
+          borderColor: '#667eea',
+        },
+      },
+      '&.Mui-focused': {
+        '& .MuiOutlinedInput-notchedOutline': {
+          borderColor: '#667eea',
+          borderWidth: 2,
+        },
+      },
+    },
+  };
+
+  const wideTextFieldStyles = {
+    '& .MuiOutlinedInput-root': {
+      borderRadius: 1,
+      minWidth: '150px', // Even wider for fields that can have long values
       '&:hover': {
         '& .MuiOutlinedInput-notchedOutline': {
           borderColor: '#667eea',
@@ -311,8 +329,8 @@ const ReportForm: React.FC = () => {
   const generateJsonPreview = () => {
     const canonicalJson = {
       Message: '',
-      SendDate: new Date().toISOString(),
-      Success: true,
+      SendDate: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+      Success: 'true',
       Hemjilt: {
         ContractNo: formData.contractNo || '',
         Customer: formData.customer || '',
@@ -320,12 +338,6 @@ const ReportForm: React.FC = () => {
         DischargeCompleted: formData.dischargeCompleted ? dayjs(formData.dischargeCompleted).format('YYYY-MM-DD HH:mm:ss') : '',
         FullCompleted: formData.fullCompleted ? dayjs(formData.fullCompleted).format('YYYY-MM-DD HH:mm:ss') : '',
         HandledBy: formData.handledBy || '',
-        Inspector: formData.inspector || '',
-        Location: formData.location || '',
-        Object: formData.object || '',
-        Product: formData.product || '',
-        ReportDate: formData.reportDate ? dayjs(formData.reportDate).format('YYYY-MM-DD') : '',
-        ReportNo: formData.reportNo || '',
         HemjiltDetails: (formData.reportDetails || []).map(detail => ({
           ActualDensity: detail.actualDensity || '0',
           ZDNMT: detail.zdnmt || '0',
@@ -339,11 +351,17 @@ const ReportForm: React.FC = () => {
           RWBNo: detail.rwbNo || '',
           SealNo: detail.sealNo || '',
           TOVltr: detail.tovLiters?.toString() || '0',
-          Temprature: detail.temperatureC || '0',
+          Temperature: detail.temperatureC || '0',
           Type: detail.type || '',
           WaterLtr: detail.waterLiters?.toString() || '0',
           WaterSm: detail.waterSm || '0',
         })),
+        Inspector: formData.inspector || '',
+        Location: formData.location || '',
+        Object: formData.object || '',
+        Product: formData.product || '',
+        ReportDate: formData.reportDate ? dayjs(formData.reportDate).format('YYYY-MM-DD HH:mm:ss') : '',
+        ReportNo: formData.reportNo || '',
       },
     };
     setJsonPreview(JSON.stringify(canonicalJson, null, 2));
@@ -614,7 +632,7 @@ const ReportForm: React.FC = () => {
             />
           </Grid>
           <Grid item xs={12} sm={4}>
-            <DatePicker
+            <DateTimePicker
               label="Report Date *"
               value={formData.reportDate ? dayjs(formData.reportDate) : null}
               onChange={(value) => handleDateChange('reportDate', value)}
@@ -709,28 +727,44 @@ const ReportForm: React.FC = () => {
           sx={{
             borderRadius: 2,
             border: '1px solid rgba(102, 126, 234, 0.1)',
+            maxWidth: '100%',
+            overflowX: 'auto',
+            '&::-webkit-scrollbar': {
+              height: '8px',
+            },
+            '&::-webkit-scrollbar-track': {
+              backgroundColor: 'rgba(102, 126, 234, 0.1)',
+              borderRadius: '4px',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              backgroundColor: 'rgba(102, 126, 234, 0.3)',
+              borderRadius: '4px',
+              '&:hover': {
+                backgroundColor: 'rgba(102, 126, 234, 0.5)',
+              },
+            },
           }}
         >
-          <Table size="small">
+          <Table size="small" sx={{ minWidth: 1200 }}>
             <TableHead>
               <TableRow sx={{ backgroundColor: 'rgba(102, 126, 234, 0.05)' }}>
-                <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>RTC No</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>RWB No</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>Seal No</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>Type</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>Actual Density</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>ZDNMT</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>Density @ 20°C</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>Diff Zdn RWBMT</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>Diff Zdn RWBMT %</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>Dip (cm)</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>RWBMT Gross</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>Temperature</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>GOV (L)</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>TOV (L)</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>Water (L)</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>Water (cm)</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>Actions</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#667eea', minWidth: '150px' }}>RTC No</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#667eea', minWidth: '150px' }}>RWB No</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#667eea', minWidth: '120px' }}>RWBMT Gross</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#667eea', minWidth: '150px' }}>Seal No</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#667eea', minWidth: '100px' }}>Type</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#667eea', minWidth: '120px' }}>Dip (cm)</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#667eea', minWidth: '120px' }}>TOV (L)</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#667eea', minWidth: '120px' }}>Water (cm)</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#667eea', minWidth: '120px' }}>Water (L)</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#667eea', minWidth: '120px' }}>GOV (L)</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#667eea', minWidth: '120px' }}>Temperature</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#667eea', minWidth: '120px' }}>Density @ 20°C</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#667eea', minWidth: '120px' }}>Actual Density</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#667eea', minWidth: '120px' }}>ZDNMT</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#667eea', minWidth: '120px' }}>Diff Zdn RWBMT</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#667eea', minWidth: '120px' }}>Diff Zdn RWBMT %</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#667eea', minWidth: '100px' }}>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -746,102 +780,27 @@ const ReportForm: React.FC = () => {
                     },
                   }}
                 >
+                  {/* RTC No */}
                   <TableCell>
                     <TextField
                       size="small"
                       value={detail.rtcNo || ''}
                       onChange={(e) => updateDetailField(index, 'rtcNo', e.target.value)}
                       fullWidth
-                      sx={smallTextFieldStyles}
+                      sx={wideTextFieldStyles}
                     />
                   </TableCell>
+                  {/* RWB No */}
                   <TableCell>
                     <TextField
                       size="small"
                       value={detail.rwbNo || ''}
                       onChange={(e) => updateDetailField(index, 'rwbNo', e.target.value)}
                       fullWidth
-                      sx={smallTextFieldStyles}
+                      sx={wideTextFieldStyles}
                     />
                   </TableCell>
-                  <TableCell>
-                    <TextField
-                      size="small"
-                      value={detail.sealNo || ''}
-                      onChange={(e) => updateDetailField(index, 'sealNo', e.target.value)}
-                      fullWidth
-                      sx={smallTextFieldStyles}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <TextField
-                      size="small"
-                      value={detail.type || ''}
-                      onChange={(e) => updateDetailField(index, 'type', e.target.value)}
-                      fullWidth
-                      sx={smallTextFieldStyles}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <TextField
-                      size="small"
-                      type="number"
-                      value={detail.actualDensity || ''}
-                      onChange={(e) => updateDetailField(index, 'actualDensity', e.target.value)}
-                      fullWidth
-                      sx={smallTextFieldStyles}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <TextField
-                      size="small"
-                      type="number"
-                      value={detail.zdnmt || ''}
-                      onChange={(e) => updateDetailField(index, 'zdnmt', e.target.value)}
-                      fullWidth
-                      sx={smallTextFieldStyles}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <TextField
-                      size="small"
-                      type="number"
-                      value={detail.densityAt20c || ''}
-                      onChange={(e) => updateDetailField(index, 'densityAt20c', e.target.value)}
-                      fullWidth
-                      sx={smallTextFieldStyles}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <TextField
-                      size="small"
-                      type="number"
-                      value={detail.differenceZdnRwbmt || ''}
-                      onChange={(e) => updateDetailField(index, 'differenceZdnRwbmt', e.target.value)}
-                      fullWidth
-                      sx={smallTextFieldStyles}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <TextField
-                      size="small"
-                      type="number"
-                      value={detail.differenceZdnRwbmtPercent || ''}
-                      onChange={(e) => updateDetailField(index, 'differenceZdnRwbmtPercent', e.target.value)}
-                      fullWidth
-                      sx={smallTextFieldStyles}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <TextField
-                      size="small"
-                      type="number"
-                      value={detail.dipSm || ''}
-                      onChange={(e) => updateDetailField(index, 'dipSm', e.target.value)}
-                      fullWidth
-                      sx={smallTextFieldStyles}
-                    />
-                  </TableCell>
+                  {/* RWBMT Gross */}
                   <TableCell>
                     <TextField
                       size="small"
@@ -852,26 +811,38 @@ const ReportForm: React.FC = () => {
                       sx={smallTextFieldStyles}
                     />
                   </TableCell>
+                  {/* Seal No */}
                   <TableCell>
                     <TextField
                       size="small"
-                      type="number"
-                      value={detail.temperatureC || ''}
-                      onChange={(e) => updateDetailField(index, 'temperatureC', e.target.value)}
+                      value={detail.sealNo || ''}
+                      onChange={(e) => updateDetailField(index, 'sealNo', e.target.value)}
+                      fullWidth
+                      sx={wideTextFieldStyles}
+                    />
+                  </TableCell>
+                  {/* Type */}
+                  <TableCell>
+                    <TextField
+                      size="small"
+                      value={detail.type || ''}
+                      onChange={(e) => updateDetailField(index, 'type', e.target.value)}
                       fullWidth
                       sx={smallTextFieldStyles}
                     />
                   </TableCell>
+                  {/* Dip (cm) */}
                   <TableCell>
                     <TextField
                       size="small"
                       type="number"
-                      value={detail.govLiters || ''}
-                      onChange={(e) => updateDetailField(index, 'govLiters', parseInt(e.target.value) || 0)}
+                      value={detail.dipSm || ''}
+                      onChange={(e) => updateDetailField(index, 'dipSm', e.target.value)}
                       fullWidth
                       sx={smallTextFieldStyles}
                     />
                   </TableCell>
+                  {/* TOV (L) */}
                   <TableCell>
                     <TextField
                       size="small"
@@ -882,6 +853,18 @@ const ReportForm: React.FC = () => {
                       sx={smallTextFieldStyles}
                     />
                   </TableCell>
+                  {/* Water (cm) */}
+                  <TableCell>
+                    <TextField
+                      size="small"
+                      type="number"
+                      value={detail.waterSm || ''}
+                      onChange={(e) => updateDetailField(index, 'waterSm', e.target.value)}
+                      fullWidth
+                      sx={smallTextFieldStyles}
+                    />
+                  </TableCell>
+                  {/* Water (L) */}
                   <TableCell>
                     <TextField
                       size="small"
@@ -892,12 +875,79 @@ const ReportForm: React.FC = () => {
                       sx={smallTextFieldStyles}
                     />
                   </TableCell>
+                  {/* GOV (L) */}
                   <TableCell>
                     <TextField
                       size="small"
                       type="number"
-                      value={detail.waterSm || ''}
-                      onChange={(e) => updateDetailField(index, 'waterSm', e.target.value)}
+                      value={detail.govLiters || ''}
+                      onChange={(e) => updateDetailField(index, 'govLiters', parseInt(e.target.value) || 0)}
+                      fullWidth
+                      sx={smallTextFieldStyles}
+                    />
+                  </TableCell>
+                  {/* Temperature */}
+                  <TableCell>
+                    <TextField
+                      size="small"
+                      type="number"
+                      value={detail.temperatureC || ''}
+                      onChange={(e) => updateDetailField(index, 'temperatureC', e.target.value)}
+                      fullWidth
+                      sx={smallTextFieldStyles}
+                    />
+                  </TableCell>
+                  {/* Density @ 20°C */}
+                  <TableCell>
+                    <TextField
+                      size="small"
+                      type="number"
+                      value={detail.densityAt20c || ''}
+                      onChange={(e) => updateDetailField(index, 'densityAt20c', e.target.value)}
+                      fullWidth
+                      sx={smallTextFieldStyles}
+                    />
+                  </TableCell>
+                  {/* Actual Density */}
+                  <TableCell>
+                    <TextField
+                      size="small"
+                      type="number"
+                      value={detail.actualDensity || ''}
+                      onChange={(e) => updateDetailField(index, 'actualDensity', e.target.value)}
+                      fullWidth
+                      sx={smallTextFieldStyles}
+                    />
+                  </TableCell>
+                  {/* ZDNMT */}
+                  <TableCell>
+                    <TextField
+                      size="small"
+                      type="number"
+                      value={detail.zdnmt || ''}
+                      onChange={(e) => updateDetailField(index, 'zdnmt', e.target.value)}
+                      fullWidth
+                      sx={smallTextFieldStyles}
+                    />
+                  </TableCell>
+                  {/* Diff Zdn RWBMT */}
+                  <TableCell>
+                    <TextField
+                      size="small"
+                      type="number"
+                      value={detail.differenceZdnRwbmt || ''}
+                      onChange={(e) => updateDetailField(index, 'differenceZdnRwbmt', e.target.value)}
+                      fullWidth
+                      sx={smallTextFieldStyles}
+                    />
+                  </TableCell>
+                  {/* Diff Zdn RWBMT % */}
+                  <TableCell>
+                    <TextField
+                      size="small"
+                      type="number"
+                      value={detail.differenceZdnRwbmtPercent || ''}
+                      onChange={(e) => updateDetailField(index, 'differenceZdnRwbmtPercent', e.target.value)}
                       fullWidth
                       sx={smallTextFieldStyles}
                     />

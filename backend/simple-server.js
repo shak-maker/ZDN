@@ -134,7 +134,7 @@ app.get('/api/reports/external/:reportNo', (req, res) => {
     res.json({
       Message: '',
       SendDate: new Date().toISOString(),
-      Success: true,
+      Success: 'true',
       Hemjilt: {
         ContractNo: report.contractNo || '',
         Customer: report.customer || '',
@@ -172,7 +172,7 @@ app.get('/api/reports/external/:reportNo', (req, res) => {
     res.json({
       Message: 'Report not found',
       SendDate: new Date().toISOString(),
-      Success: false,
+      Success: 'false',
       Hemjilt: {
         ContractNo: '',
         Customer: '',

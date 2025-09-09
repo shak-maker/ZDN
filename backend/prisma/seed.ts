@@ -72,7 +72,7 @@ async function main() {
       jsonData: {
         Message: '',
         SendDate: '2025-08-29T12:15:00Z',
-        Success: true,
+        Success: 'true',
         Hemjilt: {
           ContractNo: 'CONTRACT-001',
           Customer: 'M-Oil Group',

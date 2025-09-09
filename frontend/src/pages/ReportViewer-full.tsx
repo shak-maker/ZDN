@@ -59,13 +59,6 @@ interface Hemjilt {
   FullCompleted: string;
   HandledBy: string;
   HemjiltDetails: HemjiltDetail[];
-}
-
-interface CanonicalReport {
-  Message: string;
-  SendDate: string;
-  Success: boolean;
-  Hemjilt: Hemjilt;
   Inspector: string;
   Location: string;
   Object: string;
@@ -74,15 +67,22 @@ interface CanonicalReport {
   ReportNo: string;
 }
 
+interface CanonicalReport {
+  Message: string;
+  SendDate: string;
+  Success: string;
+  Hemjilt: Hemjilt;
+}
+
 // Legacy interfaces for backward compatibility
 interface ReportDetail {
   id?: number;
   actualDensity?: string;
   zdnmt?: string;
   densityAt20c?: string;
-  differenceAmberRwbmt?: string;
-  differenceAmberRwbmtPercent?: string;
-  dipCm?: string;
+  differenceZdnRwbmt?: string;
+  differenceZdnRwbmtPercent?: string;
+  dipSm?: string;
   govLiters?: number;
   rtcNo?: string;
   rwbmtGross?: string;
@@ -92,7 +92,7 @@ interface ReportDetail {
   temperatureC?: string;
   type?: string;
   waterLiters?: number;
-  waterCm?: string;
+  waterSm?: string;
 }
 
 interface Report {
@@ -154,12 +154,12 @@ const ReportViewer: React.FC = () => {
         dischargeCompleted: canonicalData.Hemjilt?.DischargeCompleted,
         fullCompleted: canonicalData.Hemjilt?.FullCompleted,
         handledBy: canonicalData.Hemjilt?.HandledBy,
-        inspector: canonicalData.Inspector,
-        location: canonicalData.Location,
-        object: canonicalData.Object,
-        product: canonicalData.Product,
-        reportDate: canonicalData.ReportDate,
-        reportNo: canonicalData.ReportNo,
+        inspector: canonicalData.Hemjilt?.Inspector,
+        location: canonicalData.Hemjilt?.Location,
+        object: canonicalData.Hemjilt?.Object,
+        product: canonicalData.Hemjilt?.Product,
+        reportDate: canonicalData.Hemjilt?.ReportDate,
+        reportNo: canonicalData.Hemjilt?.ReportNo,
         reportDetails: canonicalData.Hemjilt?.HemjiltDetails?.map(detail => ({
           actualDensity: detail.ActualDensity,
           zdnmt: detail.ZDNMT,
@@ -198,7 +198,7 @@ const ReportViewer: React.FC = () => {
     const dataStr = JSON.stringify(canonicalReport, null, 2);
     const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
     
-    const exportFileDefaultName = `report_${canonicalReport.ReportNo}_${new Date().toISOString().split('T')[0]}.json`;
+    const exportFileDefaultName = `report_${canonicalReport.Hemjilt?.ReportNo || 'unknown'}_${new Date().toISOString().split('T')[0]}.json`;
     
     const linkElement = document.createElement('a');
     linkElement.setAttribute('href', dataUri);
@@ -496,15 +496,20 @@ const ReportViewer: React.FC = () => {
                     <TableRow sx={{ backgroundColor: 'rgba(102, 126, 234, 0.05)' }}>
                       <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>RTC No</TableCell>
                       <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>RWB No</TableCell>
+                      <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>RWBMT Gross</TableCell>
                       <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>Seal No</TableCell>
                       <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>Type</TableCell>
+                      <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>Dip (cm)</TableCell>
+                      <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>TOV (L)</TableCell>
+                      <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>Water (cm)</TableCell>
+                      <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>Water (L)</TableCell>
+                      <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>GOV (L)</TableCell>
+                      <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>Temperature</TableCell>
+                      <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>Density @ 20°C</TableCell>
                       <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>Actual Density</TableCell>
                       <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>ZDNMT</TableCell>
-                      <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>Density @ 20°C</TableCell>
-                      <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>Temperature</TableCell>
-                      <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>GOV (L)</TableCell>
-                      <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>TOV (L)</TableCell>
-                      <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>Water (L)</TableCell>
+                      <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>Diff Zdn RWBMT</TableCell>
+                      <TableCell sx={{ fontWeight: 600, color: '#667eea' }}>Diff Zdn RWBMT %</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -522,59 +527,100 @@ const ReportViewer: React.FC = () => {
                           },
                         }}
                       >
+                        {/* RTC No */}
                         <TableCell>
                           <Typography variant="body2" fontWeight="medium">
                             {detail.rtcNo || '-'}
                           </Typography>
                         </TableCell>
+                        {/* RWB No */}
                         <TableCell>
                           <Typography variant="body2">
                             {detail.rwbNo || '-'}
                           </Typography>
                         </TableCell>
+                        {/* RWBMT Gross */}
+                        <TableCell>
+                          <Typography variant="body2" color="text.secondary">
+                            {detail.rwbmtGross || '-'}
+                          </Typography>
+                        </TableCell>
+                        {/* Seal No */}
                         <TableCell>
                           <Typography variant="body2">
                             {detail.sealNo || '-'}
                           </Typography>
                         </TableCell>
+                        {/* Type */}
                         <TableCell>
                           <Typography variant="body2">
                             {detail.type || '-'}
                           </Typography>
                         </TableCell>
+                        {/* Dip (cm) */}
                         <TableCell>
                           <Typography variant="body2" color="text.secondary">
-                            {detail.actualDensity || '-'}
+                            {detail.dipSm || '-'}
                           </Typography>
                         </TableCell>
-                        <TableCell>
-                          <Typography variant="body2" color="text.secondary">
-                            {detail.zdnmt || '-'}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="body2" color="text.secondary">
-                            {detail.densityAt20c || '-'}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="body2" color="text.secondary">
-                            {detail.temperatureC || '-'}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="body2" color="text.secondary">
-                            {detail.govLiters || '-'}
-                          </Typography>
-                        </TableCell>
+                        {/* TOV (L) */}
                         <TableCell>
                           <Typography variant="body2" color="text.secondary">
                             {detail.tovLiters || '-'}
                           </Typography>
                         </TableCell>
+                        {/* Water (cm) */}
+                        <TableCell>
+                          <Typography variant="body2" color="text.secondary">
+                            {detail.waterSm || '-'}
+                          </Typography>
+                        </TableCell>
+                        {/* Water (L) */}
                         <TableCell>
                           <Typography variant="body2" color="text.secondary">
                             {detail.waterLiters || '-'}
+                          </Typography>
+                        </TableCell>
+                        {/* GOV (L) */}
+                        <TableCell>
+                          <Typography variant="body2" color="text.secondary">
+                            {detail.govLiters || '-'}
+                          </Typography>
+                        </TableCell>
+                        {/* Temperature */}
+                        <TableCell>
+                          <Typography variant="body2" color="text.secondary">
+                            {detail.temperatureC || '-'}
+                          </Typography>
+                        </TableCell>
+                        {/* Density @ 20°C */}
+                        <TableCell>
+                          <Typography variant="body2" color="text.secondary">
+                            {detail.densityAt20c || '-'}
+                          </Typography>
+                        </TableCell>
+                        {/* Actual Density */}
+                        <TableCell>
+                          <Typography variant="body2" color="text.secondary">
+                            {detail.actualDensity || '-'}
+                          </Typography>
+                        </TableCell>
+                        {/* ZDNMT */}
+                        <TableCell>
+                          <Typography variant="body2" color="text.secondary">
+                            {detail.zdnmt || '-'}
+                          </Typography>
+                        </TableCell>
+                        {/* Diff Zdn RWBMT */}
+                        <TableCell>
+                          <Typography variant="body2" color="text.secondary">
+                            {detail.differenceZdnRwbmt || '-'}
+                          </Typography>
+                        </TableCell>
+                        {/* Diff Zdn RWBMT % */}
+                        <TableCell>
+                          <Typography variant="body2" color="text.secondary">
+                            {detail.differenceZdnRwbmtPercent || '-'}
                           </Typography>
                         </TableCell>
                       </TableRow>
@@ -650,6 +696,24 @@ const ReportViewer: React.FC = () => {
                 </Typography>
                 <Typography variant="body1">
                   {report.reportDetails?.reduce((sum, detail) => sum + (detail.tovLiters || 0), 0) || 0}
+                </Typography>
+              </Box>
+              <Box mb={2}>
+                <Typography variant="body2" color="text.secondary">
+                  Total Water (L)
+                </Typography>
+                <Typography variant="body1">
+                  {report.reportDetails?.reduce((sum, detail) => sum + (detail.waterLiters || 0), 0) || 0}
+                </Typography>
+              </Box>
+              <Box mb={2}>
+                <Typography variant="body2" color="text.secondary">
+                  Avg Temperature (°C)
+                </Typography>
+                <Typography variant="body1">
+                  {report.reportDetails?.length > 0 
+                    ? (report.reportDetails.reduce((sum, detail) => sum + (parseFloat(detail.temperatureC || '0') || 0), 0) / report.reportDetails.length).toFixed(1)
+                    : 0}
                 </Typography>
               </Box>
             </CardContent>

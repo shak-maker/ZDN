@@ -14,20 +14,20 @@ export class JsonTransformationService {
       DischargeCompleted: this.formatDateTime(reportData.dischargeCompleted),
       FullCompleted: this.formatDateTime(reportData.fullCompleted),
       HandledBy: reportData.handledBy || '',
-      HemjiltDetails: reportData.reportDetails.map(detail => this.transformDetail(detail))
-    };
-
-    return {
-      Message: '',
-      SendDate: now,
-      Success: true,
-      Hemjilt: hemjilt,
+      HemjiltDetails: reportData.reportDetails.map(detail => this.transformDetail(detail)),
       Inspector: reportData.inspector || '',
       Location: reportData.location || '',
       Object: reportData.object || '',
       Product: reportData.product || '',
       ReportDate: this.formatDateTime(reportData.reportDate),
       ReportNo: reportData.reportNo
+    };
+
+    return {
+      Message: '',
+      SendDate: now,
+      Success: 'true',
+      Hemjilt: hemjilt
     };
   }
 
@@ -78,7 +78,7 @@ export class JsonTransformationService {
     return {
       Message: message,
       SendDate: this.formatDateTime(new Date().toISOString()),
-      Success: false,
+      Success: 'false',
       Hemjilt: {
         ContractNo: '',
         Customer: '',
@@ -86,14 +86,14 @@ export class JsonTransformationService {
         DischargeCompleted: '',
         FullCompleted: '',
         HandledBy: '',
-        HemjiltDetails: []
-      },
-      Inspector: '',
-      Location: '',
-      Object: '',
-      Product: '',
-      ReportDate: '',
-      ReportNo: ''
+        HemjiltDetails: [],
+        Inspector: '',
+        Location: '',
+        Object: '',
+        Product: '',
+        ReportDate: '',
+        ReportNo: ''
+      }
     };
   }
 }
