@@ -1,4 +1,4 @@
-name: Deploy to Production
+name: Deploy to DigitalOcean
 
 on:
   push:
@@ -6,124 +6,69 @@ on:
   pull_request:
     branches: [ main ]
 
-env:
-  NODE_VERSION: '18'
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
-
 jobs:
-  test:
+  deploy:
     runs-on: ubuntu-latest
     
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: test_db
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-
+      
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: ${{ env.NODE_VERSION }}
+        node-version: '18'
         cache: 'npm'
-        cache-dependency-path: |
-          backend/package-lock.json
-          frontend/package-lock.json
-
-    - name: Install backend dependencies
+        
+    - name: Install dependencies
       run: |
-        cd backend
-        npm ci
-
-    - name: Install frontend dependencies
-      run: |
-        cd frontend
-        npm ci
-
-    - name: Run backend tests
-      run: |
-        cd backend
-        npm run test
-      env:
-        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
-
-    - name: Run frontend linting
-      run: |
-        cd frontend
-        npm run lint
-
+        cd frontend && npm ci
+        cd ../backend && npm ci
+        
     - name: Build frontend
       run: |
         cd frontend
         npm run build
-
-  build-and-push:
-    needs: test
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    
-    permissions:
-      contents: read
-      packages: write
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-
-    - name: Log in to Container Registry
-      uses: docker/login-action@v3
-      with:
-        registry: ${{ env.REGISTRY }}
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Extract metadata
-      id: meta
-      uses: docker/metadata-action@v5
-      with:
-        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-        tags: |
-          type=ref,event=branch
-          type=ref,event=pr
-          type=sha,prefix={{branch}}-
-          type=raw,value=latest,enable={{is_default_branch}}
-
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-
-  deploy:
-    needs: build-and-push
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    
-    environment: production
-
-    steps:
-    - name: Deploy to production
+        
+    - name: Build backend
       run: |
-        echo "Deploying to production..."
-        # Add your deployment commands here
-        # Example: SSH to server and pull new image
-        # ssh user@server "docker-compose pull && docker-compose up -d"
+        cd backend
+        npm run build
+        
+    - name: Deploy to DigitalOcean
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.DROPLET_IP }}
+        username: ${{ secrets.DROPLET_USERNAME }}
+        key: ${{ secrets.DROPLET_SSH_KEY }}
+        script: |
+          # Update code
+          cd /var/www/zdn
+          git pull origin main
+          
+          # Install dependencies
+          cd frontend && npm ci && npm run build
+          cd ../backend && npm ci && npm run build
+          
+          # Copy files
+          sudo cp -r frontend/dist/* /var/www/html/
+          sudo cp -r backend/dist/* /var/www/html/api/
+          sudo cp backend/package.json /var/www/html/api/
+          sudo cp backend/env.production /var/www/html/api/.env
+          sudo cp -r backend/prisma /var/www/html/api/
+          
+          # Install backend dependencies
+          cd /var/www/html/api
+          npm install --production
+          
+          # Run database migrations
+          npx prisma migrate deploy
+          npx prisma generate
+          
+          # Restart services
+          sudo systemctl restart nginx
+          sudo systemctl restart zdn-api
+          
+          # Set permissions
+          sudo chown -R www-data:www-data /var/www/html
+          sudo chmod -R 755 /var/www/html
