@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { authApi } from '../services/api';
 import {
   Box,
   Typography,
@@ -64,20 +65,8 @@ const UserManagement: React.FC = () => {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch('http://localhost:3001/api/auth/users', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to fetch users');
-      }
-
-      const usersData = await response.json();
+      const response = await authApi.getUsers();
+      const usersData = response.data;
       setUsers(usersData);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch users');
@@ -91,18 +80,7 @@ const UserManagement: React.FC = () => {
       setSubmitting(true);
       setError('');
 
-      const response = await fetch('http://localhost:3001/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newUser),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to create user');
-      }
+      await authApi.register(newUser.username, '', newUser.password);
 
       setDialogOpen(false);
       setNewUser({ username: '', fullName: '', password: '' });

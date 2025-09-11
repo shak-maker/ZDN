@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { reportsApi } from '../services/api';
 import {
   Box,
   Typography,
@@ -67,13 +68,7 @@ interface Report {
   updatedAt?: string;
 }
 
-interface ReportsResponse {
-  data: Report[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-}
+// ReportsResponse interface removed - using from api.ts
 
 const ReportsList: React.FC = () => {
   const [reports, setReports] = useState<Report[]>([]);
@@ -109,24 +104,10 @@ const ReportsList: React.FC = () => {
   const fetchReports = async (params: any = {}) => {
     try {
       setLoading(true);
-      const queryParams = new URLSearchParams({
-        page: (page + 1).toString(),
-        limit: rowsPerPage.toString(),
-        ...(search && { search }),
-        ...params,
-      });
+      // Remove unused queryParams variable
 
-      const response = await fetch(`http://localhost:3001/api/reports?${queryParams}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch reports');
-      }
-
-      const data: ReportsResponse = await response.json();
+      const response = await reportsApi.getAll(params);
+      const data = response.data;
       setReports(data.data);
       setTotal(data.total);
     } catch (err: any) {
@@ -148,17 +129,7 @@ const ReportsList: React.FC = () => {
   const handleDelete = async (id: number) => {
     if (window.confirm('Are you sure you want to delete this report?')) {
       try {
-        const response = await fetch(`http://localhost:3001/api/reports/${id}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to delete report');
-        }
-
+        await reportsApi.delete(id);
         fetchReports();
       } catch (err: any) {
         setError(err.message || 'Failed to delete report');

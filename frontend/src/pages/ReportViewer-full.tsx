@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { reportsApi } from '../services/api';
 import {
   Box,
   Typography,
@@ -132,17 +133,8 @@ const ReportViewer: React.FC = () => {
   const fetchReport = async (reportId: number) => {
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:3001/api/reports/${reportId}?t=${Date.now()}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch report');
-      }
-
-      const canonicalData: CanonicalReport = await response.json();
+      const response = await reportsApi.getById(reportId);
+      const canonicalData: CanonicalReport = response.data;
       setCanonicalReport(canonicalData);
       
       // Convert canonical format to legacy format for display

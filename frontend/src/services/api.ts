@@ -97,6 +97,7 @@ export const authApi = {
   register: (username: string, email: string, password: string) =>
     api.post('/api/auth/register', { username, email, password }),
   getProfile: () => api.get('/api/auth/profile'),
+  getUsers: () => api.get('/api/auth/users'),
 };
 
 export const reportsApi = {

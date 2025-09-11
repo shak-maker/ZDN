@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { reportsApi } from '../services/api';
 import {
   Box,
   Typography,
@@ -185,17 +186,8 @@ const ReportForm: React.FC = () => {
   const fetchReport = async (reportId: number) => {
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:3001/api/reports/${reportId}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch report');
-      }
-
-      const canonicalData: any = await response.json();
+      const response = await reportsApi.getById(reportId);
+      const canonicalData: any = response.data;
       
       // Convert canonical format to legacy format for form
       const report: Report = {
@@ -379,24 +371,10 @@ const ReportForm: React.FC = () => {
       setError('');
       setValidationErrors({});
 
-      const url = isEdit && id 
-        ? `http://localhost:3001/api/reports/${id}`
-        : 'http://localhost:3001/api/reports';
-      
-      const method = isEdit ? 'PATCH' : 'POST';
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to save report');
+      if (isEdit && id) {
+        await reportsApi.update(parseInt(id), formData);
+      } else {
+        await reportsApi.create(formData as any);
       }
 
       navigate('/reports');
