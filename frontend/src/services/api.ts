@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://157.230.39.49:3001';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -94,8 +94,8 @@ export interface QueryParams {
 export const authApi = {
   login: (username: string, password: string) =>
     api.post('/api/auth/login', { username, password }),
-  register: (username: string, email: string, password: string) =>
-    api.post('/api/auth/register', { username, email, password }),
+  register: (username: string, fullName: string, password: string) =>
+    api.post('/api/auth/register', { username, fullName, password }),
   getProfile: () => api.get('/api/auth/profile'),
   getUsers: () => api.get('/api/auth/users'),
 };

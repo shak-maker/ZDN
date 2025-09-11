@@ -372,7 +372,11 @@ const ReportForm: React.FC = () => {
       setValidationErrors({});
 
       if (isEdit && id) {
-        await reportsApi.update(parseInt(id), formData);
+        const reportId = parseInt(id);
+        if (isNaN(reportId)) {
+          throw new Error('Invalid report ID');
+        }
+        await reportsApi.update(reportId, formData);
       } else {
         await reportsApi.create(formData as any);
       }

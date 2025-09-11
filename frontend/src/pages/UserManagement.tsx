@@ -80,7 +80,7 @@ const UserManagement: React.FC = () => {
       setSubmitting(true);
       setError('');
 
-      await authApi.register(newUser.username, '', newUser.password);
+      await authApi.register(newUser.username, newUser.fullName, newUser.password);
 
       setDialogOpen(false);
       setNewUser({ username: '', fullName: '', password: '' });

@@ -104,9 +104,15 @@ const ReportsList: React.FC = () => {
   const fetchReports = async (params: any = {}) => {
     try {
       setLoading(true);
-      // Remove unused queryParams variable
+      
+      // Include pagination parameters
+      const queryParams = {
+        page: page + 1, // API expects 1-based pagination
+        limit: rowsPerPage,
+        ...params,
+      };
 
-      const response = await reportsApi.getAll(params);
+      const response = await reportsApi.getAll(queryParams);
       const data = response.data;
       setReports(data.data);
       setTotal(data.total);
