@@ -23,7 +23,7 @@ const Logo: React.FC<LogoProps> = ({
     >
       <Box
         component="img"
-        src="/ZDN logo TR.png"
+        src="/zdn-logo.png"
         alt="ZDN Logo"
         sx={{
           width: size,
