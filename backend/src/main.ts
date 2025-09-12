@@ -29,7 +29,7 @@ async function bootstrap() {
   app.use(compression());
 
   // Enable CORS with production-ready configuration
-  const corsOrigins = ['http://157.230.39.49', 'http://report.zdn.mn'];
+  const corsOrigins = ['https://report.zdn.mn'];
     
   app.enableCors({
     origin: corsOrigins,
