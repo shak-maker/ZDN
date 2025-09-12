@@ -29,9 +29,7 @@ async function bootstrap() {
   app.use(compression());
 
   // Enable CORS with production-ready configuration
-  const corsOrigins = process.env.NODE_ENV === 'production' 
-    ? [process.env.FRONTEND_URL] 
-    : ['http://localhost:5173', 'http://localhost:3000'];
+  const corsOrigins = ['http://157.230.39.49', 'http://report.zdn.mn'];
     
   app.enableCors({
     origin: corsOrigins,
