@@ -29,16 +29,13 @@ async function bootstrap() {
   app.use(compression());
 
   // Enable CORS with production-ready configuration
-  const corsOrigins = ['https://report.zdn.mn'];
-    
   app.enableCors({
-    origin: corsOrigins,
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
+      origin: '*',
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
   });
 
-  // Global validation pipe with enhanced security
+    // Global validation pipe with enhanced security
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,
     forbidNonWhitelisted: true,
