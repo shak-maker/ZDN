@@ -36,14 +36,14 @@ export class JsonTransformationService {
       ActualDensity: detail.actualDensity || '0',
       ZDNMT: detail.zdnmt || '0',
       DensityAt20c: detail.densityAt20c || '0',
-      DifferenceZdnRWBMT: detail.differenceZdnRwbmt || '0',
-      DifferenceZdnRWBMTProcent: detail.differenceZdnRwbmtPercent || '0',
+      diffTon: detail.differenceZdnRwbmt || '0',
+      diffTonProcent: detail.differenceZdnRwbmtPercent || '0',
       DipSm: detail.dipSm || '0',
       GOVLtr: detail.govLiters?.toString() || '0',
-      RTCNo: detail.rtcNo || '',
-      RWBMTGross: detail.rwbmtGross || '0',
-      RWBNo: detail.rwbNo || '',
-      SealNo: detail.sealNo || '',
+      tankNo: detail.rtcNo || '',
+      documentWeight: detail.rwbmtGross || '0',
+      billNo: detail.rwbNo || '',
+      sealNo: detail.sealNo || '',
       TOVltr: detail.tovLiters?.toString() || '0',
       Temperature: detail.temperatureC || '0',
       Type: detail.type || '',
@@ -57,7 +57,13 @@ export class JsonTransformationService {
     
     try {
       const date = new Date(dateTime);
-      return date.toISOString().replace('T', ' ').replace('Z', '').substring(0, 19);
+      const yyyy = date.getUTCFullYear().toString();
+      const MM = String(date.getUTCMonth() + 1).padStart(2, '0');
+      const dd = String(date.getUTCDate()).padStart(2, '0');
+      const HH = String(date.getUTCHours()).padStart(2, '0');
+      const mm = String(date.getUTCMinutes()).padStart(2, '0');
+      const ss = String(date.getUTCSeconds()).padStart(2, '0');
+      return `${yyyy}${MM}${dd}${HH}${mm}${ss}`;
     } catch {
       return '';
     }
