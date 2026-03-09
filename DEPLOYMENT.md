@@ -11,7 +11,7 @@
 ### One-Command Deployment
 ```bash
 # Clone the repository
-git clone <your-repo-url>
+git clone https://github.com/shak-maker/ZDN.git
 cd ZDN
 
 # Copy environment template

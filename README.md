@@ -31,7 +31,7 @@ A professional full-stack web application for managing measurement reports with 
 
 ### 1. Clone the Repository
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/shak-maker/ZDN.git
 cd ZDN
 ```
 

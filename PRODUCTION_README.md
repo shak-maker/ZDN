@@ -60,7 +60,7 @@ A full-stack application for managing measurement reports with canonical JSON fo
 
 ### 1. Clone and Setup
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/shak-maker/ZDN.git
 cd ZDN
 
 # Copy environment template

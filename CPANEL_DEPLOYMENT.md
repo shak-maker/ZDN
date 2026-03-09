@@ -13,7 +13,7 @@
 #### 1. Prepare Your Application
 ```bash
 # Clone and setup
-git clone <your-repo-url>
+git clone https://github.com/shak-maker/ZDN.git
 cd ZDN
 
 # Copy environment template
