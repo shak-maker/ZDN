@@ -1,6 +1,10 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://157.230.39.49:3001';
+// Empty VITE_API_URL = same-origin (e.g. Docker behind nginx proxy)
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL === ''
+    ? ''
+    : (import.meta.env.VITE_API_URL || 'http://157.230.39.49:3001');
 
 const api = axios.create({
   baseURL: API_BASE_URL,

@@ -10,7 +10,12 @@ export class QueryReportsDto {
   @Min(1)
   page?: number = 1;
 
-  @ApiPropertyOptional({ description: 'Items per page', minimum: 1, maximum: 100, default: 10 })
+  @ApiPropertyOptional({
+    description: 'Items per page',
+    minimum: 1,
+    maximum: 100,
+    default: 10,
+  })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
@@ -18,7 +23,9 @@ export class QueryReportsDto {
   @Max(100)
   limit?: number = 10;
 
-  @ApiPropertyOptional({ description: 'Search term for report number, customer, or inspector' })
+  @ApiPropertyOptional({
+    description: 'Search term for report number, customer, or inspector',
+  })
   @IsOptional()
   @IsString()
   search?: string;

@@ -1,12 +1,20 @@
-import { Injectable, ExecutionContext, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  Injectable,
+  ExecutionContext,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { ThrottlerGuard, ThrottlerLimitDetail } from '@nestjs/throttler';
 
 @Injectable()
 export class RateLimitGuard extends ThrottlerGuard {
-  protected async throwThrottlingException(context: ExecutionContext, throttlerLimitDetail: ThrottlerLimitDetail): Promise<void> {
+  protected async throwThrottlingException(
+    context: ExecutionContext,
+    throttlerLimitDetail: ThrottlerLimitDetail,
+  ): Promise<void> {
     const request = context.switchToHttp().getRequest();
     const ip = request.ip || request.connection.remoteAddress;
-    
+
     throw new HttpException(
       {
         statusCode: HttpStatus.TOO_MANY_REQUESTS,

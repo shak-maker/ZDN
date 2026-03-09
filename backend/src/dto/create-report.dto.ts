@@ -1,4 +1,12 @@
-import { IsString, IsOptional, IsDateString, IsArray, ValidateNested, IsNumber, IsDecimal } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsDateString,
+  IsArray,
+  ValidateNested,
+  IsNumber,
+  IsDecimal,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -144,7 +152,10 @@ export class CreateReportDto {
   @IsString()
   reportNo: string;
 
-  @ApiProperty({ description: 'Report details array', type: [CreateReportDetailDto] })
+  @ApiProperty({
+    description: 'Report details array',
+    type: [CreateReportDetailDto],
+  })
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateReportDetailDto)

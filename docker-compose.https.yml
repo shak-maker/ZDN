@@ -1,0 +1,18 @@
+# =============================================================================
+# ZDN — Compose override for HTTPS
+# =============================================================================
+# Usage: docker compose -f docker-compose.yml -f docker-compose.https.yml up -d
+# Requires: TLS certs in ./docker/ssl/fullchain.pem and ./docker/ssl/privkey.pem
+# Create ./docker/ssl/ and add your certs (e.g. Let's Encrypt).
+# =============================================================================
+
+services:
+  nginx:
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx-https.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./docker/ssl:/etc/nginx/ssl:ro
+    # Ensure ssl dir exists and has certs before starting
+    # Run: mkdir -p docker/ssl && cp /path/to/fullchain.pem docker/ssl/ && cp /path/to/privkey.pem docker/ssl/

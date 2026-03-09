@@ -1,0 +1,41 @@
+# Dependencies and build outputs
+node_modules
+**/node_modules
+**/dist
+**/.next
+**/coverage
+
+# Environment and secrets (never bake into images)
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Git and IDE
+.git
+.gitignore
+.cursor
+.vscode
+*.swp
+*.swo
+
+# Logs and temp
+*.log
+npm-debug.log*
+.npm
+tmp
+temp
+
+# Docs (optional: exclude to shrink context)
+# *.md
+# docs
+
+# Tests (optional: exclude in production build context)
+# **/test
+# **/__tests__
+# **/*.spec.ts
+# **/*.test.ts
+
+# Misc
+.DS_Store
+Thumbs.db

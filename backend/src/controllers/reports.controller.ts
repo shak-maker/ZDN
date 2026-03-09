@@ -10,7 +10,13 @@ import {
   UseGuards,
   ParseIntPipe,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { ReportsService } from '../services/reports.service';
 import { CreateReportDto } from '../dto/create-report.dto';
 import { UpdateReportDto } from '../dto/update-report.dto';
@@ -69,7 +75,10 @@ export class ReportsController {
   @ApiResponse({ status: 200, description: 'Report updated successfully' })
   @ApiResponse({ status: 404, description: 'Report not found' })
   @ApiResponse({ status: 409, description: 'Report number already exists' })
-  update(@Param('id', ParseIntPipe) id: number, @Body() updateReportDto: UpdateReportDto) {
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateReportDto: UpdateReportDto,
+  ) {
     return this.reportsService.update(id, updateReportDto);
   }
 

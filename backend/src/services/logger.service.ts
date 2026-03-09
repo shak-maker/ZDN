@@ -24,19 +24,21 @@ export class LoggerService implements NestLoggerService {
             winston.format.simple(),
           ),
         }),
-        ...(process.env.NODE_ENV === 'production' ? [
-          new winston.transports.File({
-            filename: 'logs/error.log',
-            level: 'error',
-            maxsize: 5242880, // 5MB
-            maxFiles: 5,
-          }),
-          new winston.transports.File({
-            filename: 'logs/combined.log',
-            maxsize: 5242880, // 5MB
-            maxFiles: 5,
-          }),
-        ] : []),
+        ...(process.env.NODE_ENV === 'production'
+          ? [
+              new winston.transports.File({
+                filename: 'logs/error.log',
+                level: 'error',
+                maxsize: 5242880, // 5MB
+                maxFiles: 5,
+              }),
+              new winston.transports.File({
+                filename: 'logs/combined.log',
+                maxsize: 5242880, // 5MB
+                maxFiles: 5,
+              }),
+            ]
+          : []),
       ],
     });
   }
@@ -62,7 +64,13 @@ export class LoggerService implements NestLoggerService {
   }
 
   // Custom methods for structured logging
-  logRequest(method: string, url: string, statusCode: number, responseTime: number, userAgent?: string) {
+  logRequest(
+    method: string,
+    url: string,
+    statusCode: number,
+    responseTime: number,
+    userAgent?: string,
+  ) {
     this.logger.info('HTTP Request', {
       method,
       url,

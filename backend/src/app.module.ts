@@ -31,7 +31,12 @@ import { RateLimitGuard } from './guards/rate-limit.guard';
       signOptions: { expiresIn: process.env.JWT_EXPIRES_IN || '24h' },
     }),
   ],
-  controllers: [AppController, ReportsController, AuthController, HealthController],
+  controllers: [
+    AppController,
+    ReportsController,
+    AuthController,
+    HealthController,
+  ],
   providers: [
     AppService,
     PrismaService,

@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { PrismaService } from './prisma.service';
 import { CreateReportDto } from '../dto/create-report.dto';
 import { UpdateReportDto } from '../dto/update-report.dto';
@@ -20,11 +24,14 @@ export class ReportsService {
     });
 
     if (existingReport) {
-      throw new ConflictException(`Report with number ${createReportDto.reportNo} already exists`);
+      throw new ConflictException(
+        `Report with number ${createReportDto.reportNo} already exists`,
+      );
     }
 
     // Transform to canonical JSON
-    const canonicalJson = this.jsonTransformation.transformToCanonicalJson(createReportDto);
+    const canonicalJson =
+      this.jsonTransformation.transformToCanonicalJson(createReportDto);
 
     // Create report with details in a transaction
     const result = await this.prisma.$transaction(async (tx) => {
@@ -32,38 +39,61 @@ export class ReportsService {
         data: {
           contractNo: createReportDto.contractNo,
           customer: createReportDto.customer,
-          dischargeCommenced: createReportDto.dischargeCommenced ? new Date(createReportDto.dischargeCommenced) : null,
-          dischargeCompleted: createReportDto.dischargeCompleted ? new Date(createReportDto.dischargeCompleted) : null,
-          fullCompleted: createReportDto.fullCompleted ? new Date(createReportDto.fullCompleted) : null,
+          dischargeCommenced: createReportDto.dischargeCommenced
+            ? new Date(createReportDto.dischargeCommenced)
+            : null,
+          dischargeCompleted: createReportDto.dischargeCompleted
+            ? new Date(createReportDto.dischargeCompleted)
+            : null,
+          fullCompleted: createReportDto.fullCompleted
+            ? new Date(createReportDto.fullCompleted)
+            : null,
           handledBy: createReportDto.handledBy,
           inspector: createReportDto.inspector,
           location: createReportDto.location,
           object: createReportDto.object,
           product: createReportDto.product,
-          reportDate: createReportDto.reportDate ? new Date(createReportDto.reportDate) : null,
+          reportDate: createReportDto.reportDate
+            ? new Date(createReportDto.reportDate)
+            : null,
           reportNo: createReportDto.reportNo,
           jsonData: canonicalJson as any,
         },
       });
 
       // Create report details
-      if (createReportDto.reportDetails && createReportDto.reportDetails.length > 0) {
+      if (
+        createReportDto.reportDetails &&
+        createReportDto.reportDetails.length > 0
+      ) {
         await tx.reportDetail.createMany({
           data: createReportDto.reportDetails.map((detail) => ({
             reportId: report.id,
-            actualDensity: detail.actualDensity ? parseFloat(detail.actualDensity) : null,
+            actualDensity: detail.actualDensity
+              ? parseFloat(detail.actualDensity)
+              : null,
             zdnmt: detail.zdnmt ? parseFloat(detail.zdnmt) : null,
-            densityAt20c: detail.densityAt20c ? parseFloat(detail.densityAt20c) : null,
-            differenceZdnRwbmt: detail.differenceZdnRwbmt ? parseFloat(detail.differenceZdnRwbmt) : null,
-            differenceZdnRwbmtPercent: detail.differenceZdnRwbmtPercent ? parseFloat(detail.differenceZdnRwbmtPercent) : null,
+            densityAt20c: detail.densityAt20c
+              ? parseFloat(detail.densityAt20c)
+              : null,
+            differenceZdnRwbmt: detail.differenceZdnRwbmt
+              ? parseFloat(detail.differenceZdnRwbmt)
+              : null,
+            differenceZdnRwbmtPercent: detail.differenceZdnRwbmtPercent
+              ? parseFloat(detail.differenceZdnRwbmtPercent)
+              : null,
             dipSm: detail.dipSm ? parseFloat(detail.dipSm) : null,
             govLiters: detail.govLiters,
             rtcNo: detail.rtcNo,
-            rwbmtGross: detail.rwbmtGross ? parseFloat(detail.rwbmtGross) : null,
+            rwbmtGross: detail.rwbmtGross
+              ? parseFloat(detail.rwbmtGross)
+              : null,
             rwbNo: detail.rwbNo,
             sealNo: detail.sealNo,
             tovLiters: detail.tovLiters,
-            temperatureC: detail.temperatureC ? parseFloat(detail.temperatureC) : null,
+            temperatureC: detail.temperatureC
+              ? parseFloat(detail.temperatureC)
+              : null,
             type: detail.type || undefined,
             waterLiters: detail.waterLiters || undefined,
             waterSm: detail.waterSm ? parseFloat(detail.waterSm) : null,
@@ -78,7 +108,14 @@ export class ReportsService {
   }
 
   async findAll(query: QueryReportsDto) {
-    const { page = 1, limit = 10, search, customer, inspector, product } = query;
+    const {
+      page = 1,
+      limit = 10,
+      search,
+      customer,
+      inspector,
+      product,
+    } = query;
     const skip = (page - 1) * limit;
 
     const where: any = {};
@@ -151,7 +188,7 @@ export class ReportsService {
       product: report.product || undefined,
       reportDate: report.reportDate?.toISOString(),
       reportNo: report.reportNo,
-      reportDetails: report.reportDetails.map(detail => ({
+      reportDetails: report.reportDetails.map((detail) => ({
         actualDensity: detail.actualDensity?.toString(),
         zdnmt: detail.zdnmt?.toString(),
         densityAt20c: detail.densityAt20c?.toString(),
@@ -168,7 +205,7 @@ export class ReportsService {
         type: detail.type || undefined,
         waterLiters: detail.waterLiters || undefined,
         waterSm: detail.waterSm?.toString(),
-      }))
+      })),
     };
 
     return this.jsonTransformation.transformToCanonicalJson(reportData);
@@ -200,7 +237,7 @@ export class ReportsService {
       product: report.product || undefined,
       reportDate: report.reportDate?.toISOString(),
       reportNo: report.reportNo,
-      reportDetails: report.reportDetails.map(detail => ({
+      reportDetails: report.reportDetails.map((detail) => ({
         actualDensity: detail.actualDensity?.toString(),
         zdnmt: detail.zdnmt?.toString(),
         densityAt20c: detail.densityAt20c?.toString(),
@@ -217,7 +254,7 @@ export class ReportsService {
         type: detail.type || undefined,
         waterLiters: detail.waterLiters || undefined,
         waterSm: detail.waterSm?.toString(),
-      }))
+      })),
     };
 
     return this.jsonTransformation.transformToCanonicalJson(reportData);
@@ -234,13 +271,18 @@ export class ReportsService {
     }
 
     // Check if report number is being changed and if it already exists
-    if (updateReportDto.reportNo && updateReportDto.reportNo !== existingDbReport.reportNo) {
+    if (
+      updateReportDto.reportNo &&
+      updateReportDto.reportNo !== existingDbReport.reportNo
+    ) {
       const reportWithSameNumber = await this.prisma.report.findUnique({
         where: { reportNo: updateReportDto.reportNo },
       });
 
       if (reportWithSameNumber) {
-        throw new ConflictException(`Report with number ${updateReportDto.reportNo} already exists`);
+        throw new ConflictException(
+          `Report with number ${updateReportDto.reportNo} already exists`,
+        );
       }
     }
 
@@ -257,15 +299,23 @@ export class ReportsService {
         data: {
           contractNo: updateReportDto.contractNo,
           customer: updateReportDto.customer,
-          dischargeCommenced: updateReportDto.dischargeCommenced ? new Date(updateReportDto.dischargeCommenced) : undefined,
-          dischargeCompleted: updateReportDto.dischargeCompleted ? new Date(updateReportDto.dischargeCompleted) : undefined,
-          fullCompleted: updateReportDto.fullCompleted ? new Date(updateReportDto.fullCompleted) : undefined,
+          dischargeCommenced: updateReportDto.dischargeCommenced
+            ? new Date(updateReportDto.dischargeCommenced)
+            : undefined,
+          dischargeCompleted: updateReportDto.dischargeCompleted
+            ? new Date(updateReportDto.dischargeCompleted)
+            : undefined,
+          fullCompleted: updateReportDto.fullCompleted
+            ? new Date(updateReportDto.fullCompleted)
+            : undefined,
           handledBy: updateReportDto.handledBy,
           inspector: updateReportDto.inspector,
           location: updateReportDto.location,
           object: updateReportDto.object,
           product: updateReportDto.product,
-          reportDate: updateReportDto.reportDate ? new Date(updateReportDto.reportDate) : undefined,
+          reportDate: updateReportDto.reportDate
+            ? new Date(updateReportDto.reportDate)
+            : undefined,
           reportNo: updateReportDto.reportNo,
           jsonData: canonicalJson as any,
         },
@@ -283,19 +333,31 @@ export class ReportsService {
           await tx.reportDetail.createMany({
             data: updateReportDto.reportDetails.map((detail) => ({
               reportId: id,
-              actualDensity: detail.actualDensity ? parseFloat(detail.actualDensity) : null,
+              actualDensity: detail.actualDensity
+                ? parseFloat(detail.actualDensity)
+                : null,
               zdnmt: detail.zdnmt ? parseFloat(detail.zdnmt) : null,
-              densityAt20c: detail.densityAt20c ? parseFloat(detail.densityAt20c) : null,
-              differenceZdnRwbmt: detail.differenceZdnRwbmt ? parseFloat(detail.differenceZdnRwbmt) : null,
-              differenceZdnRwbmtPercent: detail.differenceZdnRwbmtPercent ? parseFloat(detail.differenceZdnRwbmtPercent) : null,
+              densityAt20c: detail.densityAt20c
+                ? parseFloat(detail.densityAt20c)
+                : null,
+              differenceZdnRwbmt: detail.differenceZdnRwbmt
+                ? parseFloat(detail.differenceZdnRwbmt)
+                : null,
+              differenceZdnRwbmtPercent: detail.differenceZdnRwbmtPercent
+                ? parseFloat(detail.differenceZdnRwbmtPercent)
+                : null,
               dipSm: detail.dipSm ? parseFloat(detail.dipSm) : null,
               govLiters: detail.govLiters,
               rtcNo: detail.rtcNo,
-              rwbmtGross: detail.rwbmtGross ? parseFloat(detail.rwbmtGross) : null,
+              rwbmtGross: detail.rwbmtGross
+                ? parseFloat(detail.rwbmtGross)
+                : null,
               rwbNo: detail.rwbNo,
               sealNo: detail.sealNo,
               tovLiters: detail.tovLiters,
-              temperatureC: detail.temperatureC ? parseFloat(detail.temperatureC) : null,
+              temperatureC: detail.temperatureC
+                ? parseFloat(detail.temperatureC)
+                : null,
               type: detail.type || undefined,
               waterLiters: detail.waterLiters || undefined,
               waterSm: detail.waterSm ? parseFloat(detail.waterSm) : null,
@@ -312,7 +374,7 @@ export class ReportsService {
 
   async remove(id: number) {
     const report = await this.findOne(id);
-    
+
     await this.prisma.report.delete({
       where: { id },
     });

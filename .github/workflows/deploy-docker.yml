@@ -1,0 +1,26 @@
+# Deploy ZDN to DigitalOcean using Docker Compose.
+# Requires: Docker and Docker Compose on the droplet, and .env in the app directory.
+# Same secrets as deploy.yml: DROPLET_IP, DROPLET_USERNAME, DROPLET_SSH_KEY.
+
+name: Deploy to DigitalOcean (Docker)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via Docker on droplet
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DROPLET_IP }}
+          username: ${{ secrets.DROPLET_USERNAME }}
+          key: ${{ secrets.DROPLET_SSH_KEY }}
+          script: |
+            set -e
+            cd /var/www/zdn
+            git pull origin main
+            docker compose --env-file .env up -d --build

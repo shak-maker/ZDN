@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from './prisma.service';
 import { LoginDto, RegisterDto } from '../dto/auth.dto';
@@ -14,15 +18,12 @@ export class AuthService {
   async validateUser(username: string, password: string): Promise<any> {
     const user = await this.prisma.user.findFirst({
       where: {
-        OR: [
-          { username },
-          { email: username },
-        ],
+        OR: [{ username }, { email: username }],
         isActive: true,
       },
     });
 
-    if (user && await bcrypt.compare(password, user.password)) {
+    if (user && (await bcrypt.compare(password, user.password))) {
       const { password: _, ...result } = user;
       return result;
     }

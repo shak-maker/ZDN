@@ -102,5 +102,8 @@ dist
 tmp/
 temp/
 
+# Deploy SSH key (server-only, do not commit)
+.ssh-deploy/
+
 # Prisma
 prisma/migrations/

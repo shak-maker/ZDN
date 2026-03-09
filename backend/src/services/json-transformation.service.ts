@@ -1,12 +1,19 @@
 import { Injectable } from '@nestjs/common';
-import { CreateReportDto, CreateReportDetailDto } from '../dto/create-report.dto';
-import { CanonicalJsonResponse, Hemjilt, HemjiltDetail } from '../interfaces/canonical-json.interface';
+import {
+  CreateReportDto,
+  CreateReportDetailDto,
+} from '../dto/create-report.dto';
+import {
+  CanonicalJsonResponse,
+  Hemjilt,
+  HemjiltDetail,
+} from '../interfaces/canonical-json.interface';
 
 @Injectable()
 export class JsonTransformationService {
   transformToCanonicalJson(reportData: CreateReportDto): CanonicalJsonResponse {
     const now = this.formatDateTime(new Date().toISOString());
-    
+
     const hemjilt: Hemjilt = {
       ContractNo: reportData.contractNo || '',
       Customer: reportData.customer || '',
@@ -14,20 +21,22 @@ export class JsonTransformationService {
       DischargeCompleted: this.formatDateTime(reportData.dischargeCompleted),
       FullCompleted: this.formatDateTime(reportData.fullCompleted),
       HandledBy: reportData.handledBy || '',
-      HemjiltDetails: reportData.reportDetails.map(detail => this.transformDetail(detail)),
+      HemjiltDetails: reportData.reportDetails.map((detail) =>
+        this.transformDetail(detail),
+      ),
       Inspector: reportData.inspector || '',
       Location: reportData.location || '',
       Object: reportData.object || '',
       Product: reportData.product || '',
       ReportDate: this.formatDateTime(reportData.reportDate),
-      ReportNo: reportData.reportNo
+      ReportNo: reportData.reportNo,
     };
 
     return {
       Message: '',
       SendDate: now,
       Success: 'true',
-      Hemjilt: hemjilt
+      Hemjilt: hemjilt,
     };
   }
 
@@ -48,13 +57,13 @@ export class JsonTransformationService {
       Temperature: detail.temperatureC || '0',
       Type: detail.type || '',
       WaterLtr: detail.waterLiters?.toString() || '0',
-      WaterSm: detail.waterSm || '0'
+      WaterSm: detail.waterSm || '0',
     };
   }
 
   private formatDateTime(dateTime?: string): string {
     if (!dateTime) return '';
-    
+
     try {
       const date = new Date(dateTime);
       const yyyy = date.getUTCFullYear().toString();
@@ -71,7 +80,7 @@ export class JsonTransformationService {
 
   private formatDate(date?: string): string {
     if (!date) return '';
-    
+
     try {
       const dateObj = new Date(date);
       return dateObj.toISOString().split('T')[0];
@@ -98,8 +107,8 @@ export class JsonTransformationService {
         Object: '',
         Product: '',
         ReportDate: '',
-        ReportNo: ''
-      }
+        ReportNo: '',
+      },
     };
   }
 }

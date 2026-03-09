@@ -15,7 +15,7 @@ export class HealthController {
     try {
       // Check database connectivity
       await this.prisma.$queryRaw`SELECT 1`;
-      
+
       return {
         status: 'healthy',
         timestamp: new Date().toISOString(),
@@ -40,7 +40,7 @@ export class HealthController {
     try {
       // Check database connectivity
       await this.prisma.$queryRaw`SELECT 1`;
-      
+
       return {
         status: 'ready',
         timestamp: new Date().toISOString(),
