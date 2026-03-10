@@ -5,12 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "build:prod": "NODE_ENV=production vite build",
+    "build": "npx vite build",
+    "build:prod": "NODE_ENV=production npx vite build",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "preview": "vite preview",
-    "analyze": "vite build --mode analyze"
+    "preview": "npx vite preview",
+    "analyze": "npx vite build --mode analyze"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
