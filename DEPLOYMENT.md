@@ -1,30 +1,36 @@
 # Production Deployment Guide
 
-## 🚀 Quick Start
+## 🚀 Quick Start (Docker + GitHub Actions)
 
 ### Prerequisites
-- Node.js 18+ on your server
-- MySQL database (cPanel compatible)
-- Domain name and SSL certificate
-- PM2 process manager
+- Linux server with Docker and Docker Compose installed
+- MySQL 8 and Redis will run in containers (no external DB required)
+- Domain name and SSL certificate (optional; enabled via `docker-compose.https.yml`)
+- SSH access to the server
 
-### One-Command Deployment
-```bash
-# Clone the repository
-git clone https://github.com/shak-maker/ZDN.git
-cd ZDN
+### One-Command Deployment (via CI)
+1. On the server:
+   ```bash
+   mkdir -p /var/www/zdn
+   cd /var/www/zdn
+   git clone https://github.com/shak-maker/ZDN.git .
+   cp .env.production.example .env
+   nano .env   # Fill MYSQL_*, JWT_SECRET, API_KEY_SECRET, FRONTEND_URL, etc.
+   ```
 
-# Copy environment template
-cp backend/env.production backend/.env
+2. In GitHub repository settings, configure secrets:
+   - `SERVER_IP` – server public IP
+   - `SERVER_USER` – SSH user (e.g. `deploy`)
+   - `SERVER_SSH_KEY` – private key with access
+   - `SERVER_PATH` – deployment path, e.g. `/var/www/zdn`
 
-# Edit .env with your values
-nano backend/.env
+3. Push to `main`. The workflow `.github/workflows/deploy.yml` will:
+   - SSH into the server
+   - `git fetch` and reset to `origin/main`
+   - `docker compose build --pull`
+   - `docker compose up -d --remove-orphans`
 
-# Deploy to cPanel
-./scripts/cpanel-deploy.sh
-```
-
-## 📱 cPanel Deployment (Recommended)
+## 📱 Alternative cPanel Deployment (Legacy)
 
 ### Environment Setup
 1. Copy the production environment template:

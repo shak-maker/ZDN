@@ -44,6 +44,9 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/prisma ./prisma
 
+# Persistent uploads directory (mounted as volume in docker-compose)
+RUN mkdir -p /app/uploads && chown app:app /app/uploads
+
 # Optional: tune Node for containers (override via env in compose)
 ENV NODE_OPTIONS="--max-old-space-size=256"
 

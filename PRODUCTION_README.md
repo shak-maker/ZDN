@@ -50,7 +50,7 @@ A full-stack application for managing measurement reports with canonical JSON fo
                     └─────────────────┘
 ```
 
-## 🚀 Quick Start
+## 🚀 Quick Start (Docker-based)
 
 ### Prerequisites
 - cPanel hosting with Node.js support
@@ -70,13 +70,15 @@ cp backend/env.production backend/.env
 nano backend/.env
 ```
 
-### 2. Deploy
+### 2. Run with Docker Compose (local or server)
 ```bash
-# Make scripts executable
-chmod +x scripts/*.sh
+# Copy environment template for Docker / server
+cp .env.production.example .env
+nano .env   # Fill MYSQL_*, JWT_*, API_KEY_SECRET, FRONTEND_URL, etc.
 
-# Deploy to cPanel
-./scripts/cpanel-deploy.sh
+# Build and start the full stack
+docker compose build
+docker compose up -d
 ```
 
 ### 3. Verify
@@ -90,24 +92,33 @@ curl https://your-domain.com/
 
 ## 🔧 Configuration
 
-### Environment Variables
+### Environment Variables (Docker)
 
-#### Required
-```env
-DATABASE_URL="mysql://user:pass@localhost:3306/db"
-JWT_SECRET="your-32-char-secret"
-API_KEY_SECRET="your-32-char-secret"
-FRONTEND_URL="https://your-domain.com"
-```
+Environment variables are loaded from `.env` (or `.env.production`) and used by `docker-compose.yml`. Start from `.env.production.example`:
 
-#### Optional
 ```env
 NODE_ENV=production
-PORT=3001
-LOG_LEVEL=info
+API_PORT=80
+
+MYSQL_ROOT_PASSWORD=your-root-password
+MYSQL_DATABASE=zdn_db
+MYSQL_USER=zdn_user
+MYSQL_PASSWORD=your-user-password
+
+DATABASE_URL="mysql://zdn_user:your-user-password@mysql:3306/zdn_db"
+
+JWT_SECRET="your-32-char-secret"
+API_KEY_SECRET="your-32-char-secret"
+JWT_EXPIRES_IN=24h
+FRONTEND_URL="https://your-domain.com"
+
+REDIS_HOST=redis
+REDIS_PORT=6379
+
+BCRYPT_ROUNDS=12
 RATE_LIMIT_TTL=60
 RATE_LIMIT_LIMIT=100
-BCRYPT_ROUNDS=12
+LOG_LEVEL=info
 ```
 
 ### Database Configuration

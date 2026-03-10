@@ -1,0 +1,48 @@
+name: Deploy ZDN to Production
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            set -e
+
+            cd "${{ secrets.SERVER_PATH }}"
+
+            if [ ! -d .git ]; then
+              echo "Repository not present at ${{ secrets.SERVER_PATH }}, cloning..."
+              git clone "https://github.com/${GITHUB_REPOSITORY}.git" .
+            fi
+
+            git fetch origin main
+            git reset --hard origin/main
+
+            if [ ! -f .env ]; then
+              if [ -f .env.production ]; then
+                cp .env.production .env
+              else
+                echo ".env (or .env.production) is required on the server. Create it from .env.production.example before deploying."
+                exit 1
+              fi
+            fi
+
+            docker compose pull || true
+            docker compose build --pull
+            docker compose up -d --remove-orphans
+
+            docker image prune -f
+

@@ -32,6 +32,24 @@ services:
       start_period: 30s
 
   # ---------------------------------------------------------------------------
+  # Redis — caching / rate limiting / sessions (internal only)
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ---------------------------------------------------------------------------
   # Backend — NestJS API (internal only)
   # ---------------------------------------------------------------------------
   backend:
@@ -54,6 +72,10 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+      redis:
+        condition: service_started
+    volumes:
+      - uploads:/app/uploads
     command: >
       sh -c "npx prisma migrate deploy && node dist/main.js"
     networks:
@@ -105,6 +127,8 @@ networks:
 
 volumes:
   mysql_data:
+  redis_data:
+  uploads:
 
 configs:
   mysql_cnf:
