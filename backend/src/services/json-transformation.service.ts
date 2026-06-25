@@ -35,7 +35,7 @@ export class JsonTransformationService {
     return {
       Message: '',
       SendDate: now,
-      Success: 'true',
+      Success: '1',
       Hemjilt: hemjilt,
     };
   }
@@ -93,7 +93,7 @@ export class JsonTransformationService {
     return {
       Message: message,
       SendDate: this.formatDateTime(new Date().toISOString()),
-      Success: 'false',
+      Success: '0',
       Hemjilt: {
         ContractNo: '',
         Customer: '',

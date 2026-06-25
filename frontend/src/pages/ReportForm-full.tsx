@@ -322,7 +322,7 @@ const ReportForm: React.FC = () => {
     const canonicalJson = {
       Message: '',
       SendDate: dayjs().format('YYYY-MM-DD HH:mm:ss'),
-      Success: 'true',
+      Success: '1',
       Hemjilt: {
         ContractNo: formData.contractNo || '',
         Customer: formData.customer || '',
