@@ -1,0 +1,52 @@
+# ZDN on the DigitalOcean droplet.
+#
+# Host nginx keeps ports 80 and 443 (TLS + the other sites on this machine).
+# This file replaces PM2 and the static files in /var/www/html:
+#   frontend -> 127.0.0.1:8088
+#   backend  -> 127.0.0.1:3001
+#
+# Database stays the external MySQL in backend/.env. Do not start the
+# MySQL/Redis services from docker-compose.yml on this 2 GB droplet.
+#
+#   docker compose -f docker-compose.droplet.yml up -d --build
+
+name: zdn
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: zdn-backend:latest
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      PORT: "3001"
+    ports:
+      - "127.0.0.1:3001:3001"
+    command: ["node", "dist/main.js"]
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"require('http').get('http://127.0.0.1:3001/health/live', (r) => { r.resume(); r.on('end', () => process.exit(r.statusCode === 200 ? 0 : 1)); }).on('error', () => process.exit(1))\"",
+        ]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 25s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: https://report-api.zdn.mn
+    image: zdn-frontend:latest
+    restart: unless-stopped
+    # Image runs nginx as non-root and cannot bind port 80. Root here is
+    # only inside the container; the port is published on localhost.
+    user: "0:0"
+    ports:
+      - "127.0.0.1:8088:80"

@@ -142,7 +142,9 @@ const Layout: React.FC = () => {
         sx={{
           flexGrow: 1,
           p: 3,
+          minWidth: 0,
           width: { sm: `calc(100% - ${drawerWidth}px)` },
+          maxWidth: '100%',
         }}
       >
         <Toolbar />

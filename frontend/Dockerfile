@@ -6,7 +6,7 @@ WORKDIR /app
 
 # Install only dependencies for better layer caching
 COPY package.json package-lock.json* ./
-RUN npm ci --ignore-scripts
+RUN if [ -f package-lock.json ]; then npm ci --ignore-scripts; else npm install --ignore-scripts; fi
 
 # =============================================================================
 # Stage 2: Builder (Vite build)
@@ -26,7 +26,7 @@ ENV VITE_API_URL=${VITE_API_URL}
 ENV npm_config_update_notifier=false \
     npm_config_audit=false
 
-RUN npm run build
+RUN npm install --no-save terser && npm run build
 
 # =============================================================================
 # Stage 3: Production runner (nginx, non-root)

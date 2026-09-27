@@ -7,6 +7,9 @@
   "license": "UNLICENSED",
   "scripts": {
     "build": "nest build",
+    "build:clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true});require('fs').rmSync('node_modules/.cache/tsbuildinfo',{force:true})\" && nest build",
+    "verify:build": "node scripts/verify-build.js dist",
+    "deploy": "bash ../scripts/deploy-backend.sh",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",

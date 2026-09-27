@@ -40,9 +40,8 @@ jobs:
               fi
             fi
 
-            docker compose pull || true
-            docker compose build --pull
-            docker compose up -d --remove-orphans
+            docker compose -f docker-compose.droplet.yml build
+            docker compose -f docker-compose.droplet.yml up -d --remove-orphans
 
             docker image prune -f
 

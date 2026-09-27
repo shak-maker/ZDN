@@ -42,16 +42,27 @@ interface ReportDetail {
   differenceZdnRwbmt?: string;
   differenceZdnRwbmtPercent?: string;
   dipSm?: string;
-  govLiters?: number;
+  govLiters?: number | string;
   rtcNo?: string;
   rwbmtGross?: string;
   rwbNo?: string;
   sealNo?: string;
-  tovLiters?: number;
+  tovLiters?: number | string;
   temperatureC?: string;
   type?: string;
-  waterLiters?: number;
+  waterLiters?: number | string;
   waterSm?: string;
+}
+
+function measurementText(value: string | number | null | undefined): string {
+  if (value === undefined || value === null) return '';
+  return String(value);
+}
+
+function literForPayload(value: string | number | null | undefined): number {
+  if (value === undefined || value === null || value === '') return 0;
+  const parsed = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
 }
 
 interface Report {
@@ -98,10 +109,10 @@ const ReportForm: React.FC = () => {
     },
   };
 
-  const smallTextFieldStyles = {
+  const measurementInputStyles = {
     '& .MuiOutlinedInput-root': {
       borderRadius: 1,
-      minWidth: '120px', // Increased minimum width for better visibility
+      minWidth: '16ch',
       '&:hover': {
         '& .MuiOutlinedInput-notchedOutline': {
           borderColor: '#667eea',
@@ -114,6 +125,20 @@ const ReportForm: React.FC = () => {
         },
       },
     },
+    '& .MuiOutlinedInput-input': {
+      textAlign: 'right',
+      fontVariantNumeric: 'tabular-nums',
+      fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+      py: 1.25,
+    },
+  };
+
+  const headerCellSx = {
+    fontWeight: 600,
+    color: '#667eea',
+    whiteSpace: 'nowrap',
+    backgroundColor: '#f7f8fe',
+    zIndex: 2,
   };
 
   const wideTextFieldStyles = {
@@ -210,15 +235,15 @@ const ReportForm: React.FC = () => {
           differenceZdnRwbmt: detail.DifferenceZdnRWBMT,
           differenceZdnRwbmtPercent: detail.DifferenceZdnRWBMTProcent,
           dipSm: detail.DipSm,
-          govLiters: parseFloat(detail.GOVLtr) || 0,
+          govLiters: detail.GOVLtr ?? '',
           rtcNo: detail.RTCNo,
           rwbmtGross: detail.RWBMTGross,
           rwbNo: detail.RWBNo,
           sealNo: detail.SealNo,
-          tovLiters: parseFloat(detail.TOVltr) || 0,
+          tovLiters: detail.TOVltr ?? '',
           temperatureC: detail.Temperature,
           type: detail.Type,
-          waterLiters: parseFloat(detail.WaterLtr) || 0,
+          waterLiters: detail.WaterLtr ?? '',
           waterSm: detail.WaterSm,
         })) || [],
       };
@@ -253,15 +278,15 @@ const ReportForm: React.FC = () => {
       differenceZdnRwbmt: '',
       differenceZdnRwbmtPercent: '',
       dipSm: '',
-      govLiters: 0,
+      govLiters: '',
       rtcNo: '',
       rwbmtGross: '',
       rwbNo: '',
       sealNo: '',
-      tovLiters: 0,
+      tovLiters: '',
       temperatureC: '',
       type: '',
-      waterLiters: 0,
+      waterLiters: '',
       waterSm: '',
     };
 
@@ -337,15 +362,15 @@ const ReportForm: React.FC = () => {
           DifferenceZdnRWBMT: detail.differenceZdnRwbmt || '0',
           DifferenceZdnRWBMTProcent: detail.differenceZdnRwbmtPercent || '0',
           DipSm: detail.dipSm || '0',
-          GOVLtr: detail.govLiters?.toString() || '0',
+          GOVLtr: measurementText(detail.govLiters) || '0',
           RTCNo: detail.rtcNo || '',
           RWBMTGross: detail.rwbmtGross || '0',
           RWBNo: detail.rwbNo || '',
           SealNo: detail.sealNo || '',
-          TOVltr: detail.tovLiters?.toString() || '0',
+          TOVltr: measurementText(detail.tovLiters) || '0',
           Temperature: detail.temperatureC || '0',
           Type: detail.type || '',
-          WaterLtr: detail.waterLiters?.toString() || '0',
+          WaterLtr: measurementText(detail.waterLiters) || '0',
           WaterSm: detail.waterSm || '0',
         })),
         Inspector: formData.inspector || '',
@@ -371,14 +396,24 @@ const ReportForm: React.FC = () => {
       setError('');
       setValidationErrors({});
 
+      const payload: Partial<Report> = {
+        ...formData,
+        reportDetails: (formData.reportDetails || []).map((detail) => ({
+          ...detail,
+          govLiters: literForPayload(detail.govLiters),
+          tovLiters: literForPayload(detail.tovLiters),
+          waterLiters: literForPayload(detail.waterLiters),
+        })),
+      };
+
       if (isEdit && id) {
         const reportId = parseInt(id);
         if (isNaN(reportId)) {
           throw new Error('Invalid report ID');
         }
-        await reportsApi.update(reportId, formData);
+        await reportsApi.update(reportId, payload as any);
       } else {
-        await reportsApi.create(formData as any);
+        await reportsApi.create(payload as any);
       }
 
       navigate('/reports');
@@ -710,9 +745,11 @@ const ReportForm: React.FC = () => {
             borderRadius: 2,
             border: '1px solid rgba(102, 126, 234, 0.1)',
             maxWidth: '100%',
-            overflowX: 'auto',
+            maxHeight: '70vh',
+            overflow: 'auto',
             '&::-webkit-scrollbar': {
               height: '8px',
+              width: '8px',
             },
             '&::-webkit-scrollbar-track': {
               backgroundColor: 'rgba(102, 126, 234, 0.1)',
@@ -727,26 +764,26 @@ const ReportForm: React.FC = () => {
             },
           }}
         >
-          <Table size="small" sx={{ minWidth: 1200 }}>
+          <Table stickyHeader size="small" sx={{ minWidth: 1960 }}>
             <TableHead>
-              <TableRow sx={{ backgroundColor: 'rgba(102, 126, 234, 0.05)' }}>
-                <TableCell sx={{ fontWeight: 600, color: '#667eea', minWidth: '150px' }}>RTC No</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#667eea', minWidth: '150px' }}>RWB No</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#667eea', minWidth: '120px' }}>RWBMT Gross</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#667eea', minWidth: '150px' }}>Seal No</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#667eea', minWidth: '100px' }}>Type</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#667eea', minWidth: '120px' }}>Dip (cm)</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#667eea', minWidth: '120px' }}>TOV (L)</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#667eea', minWidth: '120px' }}>Water (cm)</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#667eea', minWidth: '120px' }}>Water (L)</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#667eea', minWidth: '120px' }}>GOV (L)</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#667eea', minWidth: '120px' }}>Temperature</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#667eea', minWidth: '120px' }}>Density @ 20°C</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#667eea', minWidth: '120px' }}>Actual Density</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#667eea', minWidth: '120px' }}>ZDNMT</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#667eea', minWidth: '120px' }}>Diff Zdn RWBMT</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#667eea', minWidth: '120px' }}>Diff Zdn RWBMT %</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#667eea', minWidth: '100px' }}>Actions</TableCell>
+              <TableRow>
+                <TableCell sx={{ ...headerCellSx, minWidth: 150 }}>RTC No</TableCell>
+                <TableCell sx={{ ...headerCellSx, minWidth: 150 }}>RWB No</TableCell>
+                <TableCell sx={{ ...headerCellSx, minWidth: 160 }}>RWBMT Gross</TableCell>
+                <TableCell sx={{ ...headerCellSx, minWidth: 150 }}>Seal No</TableCell>
+                <TableCell sx={{ ...headerCellSx, minWidth: 120 }}>Type</TableCell>
+                <TableCell sx={{ ...headerCellSx, minWidth: 160 }}>Dip (cm)</TableCell>
+                <TableCell sx={{ ...headerCellSx, minWidth: 160 }}>TOV (L)</TableCell>
+                <TableCell sx={{ ...headerCellSx, minWidth: 160 }}>Water (cm)</TableCell>
+                <TableCell sx={{ ...headerCellSx, minWidth: 160 }}>Water (L)</TableCell>
+                <TableCell sx={{ ...headerCellSx, minWidth: 160 }}>GOV (L)</TableCell>
+                <TableCell sx={{ ...headerCellSx, minWidth: 160 }}>Temperature</TableCell>
+                <TableCell sx={{ ...headerCellSx, minWidth: 160 }}>Density @ 20°C</TableCell>
+                <TableCell sx={{ ...headerCellSx, minWidth: 160 }}>Actual Density</TableCell>
+                <TableCell sx={{ ...headerCellSx, minWidth: 160 }}>ZDNMT</TableCell>
+                <TableCell sx={{ ...headerCellSx, minWidth: 180 }}>Diff Zdn RWBMT</TableCell>
+                <TableCell sx={{ ...headerCellSx, minWidth: 180 }}>Diff Zdn RWBMT %</TableCell>
+                <TableCell sx={{ ...headerCellSx, minWidth: 88 }}>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -782,15 +819,14 @@ const ReportForm: React.FC = () => {
                       sx={wideTextFieldStyles}
                     />
                   </TableCell>
-                  {/* RWBMT Gross */}
                   <TableCell>
                     <TextField
                       size="small"
-                      type="number"
-                      value={detail.rwbmtGross || ''}
+                      value={measurementText(detail.rwbmtGross)}
                       onChange={(e) => updateDetailField(index, 'rwbmtGross', e.target.value)}
                       fullWidth
-                      sx={smallTextFieldStyles}
+                      inputProps={{ inputMode: 'decimal', 'aria-label': 'RWBMT Gross' }}
+                      sx={measurementInputStyles}
                     />
                   </TableCell>
                   {/* Seal No */}
@@ -810,128 +846,117 @@ const ReportForm: React.FC = () => {
                       value={detail.type || ''}
                       onChange={(e) => updateDetailField(index, 'type', e.target.value)}
                       fullWidth
-                      sx={smallTextFieldStyles}
+                      sx={wideTextFieldStyles}
                     />
                   </TableCell>
-                  {/* Dip (cm) */}
                   <TableCell>
                     <TextField
                       size="small"
-                      type="number"
-                      value={detail.dipSm || ''}
+                      value={measurementText(detail.dipSm)}
                       onChange={(e) => updateDetailField(index, 'dipSm', e.target.value)}
                       fullWidth
-                      sx={smallTextFieldStyles}
+                      inputProps={{ inputMode: 'decimal', 'aria-label': 'Dip (cm)' }}
+                      sx={measurementInputStyles}
                     />
                   </TableCell>
-                  {/* TOV (L) */}
                   <TableCell>
                     <TextField
                       size="small"
-                      type="number"
-                      value={detail.tovLiters || ''}
-                      onChange={(e) => updateDetailField(index, 'tovLiters', parseInt(e.target.value) || 0)}
+                      value={measurementText(detail.tovLiters)}
+                      onChange={(e) => updateDetailField(index, 'tovLiters', e.target.value)}
                       fullWidth
-                      sx={smallTextFieldStyles}
+                      inputProps={{ inputMode: 'decimal', 'aria-label': 'TOV (L)' }}
+                      sx={measurementInputStyles}
                     />
                   </TableCell>
-                  {/* Water (cm) */}
                   <TableCell>
                     <TextField
                       size="small"
-                      type="number"
-                      value={detail.waterSm || ''}
+                      value={measurementText(detail.waterSm)}
                       onChange={(e) => updateDetailField(index, 'waterSm', e.target.value)}
                       fullWidth
-                      sx={smallTextFieldStyles}
+                      inputProps={{ inputMode: 'decimal', 'aria-label': 'Water (cm)' }}
+                      sx={measurementInputStyles}
                     />
                   </TableCell>
-                  {/* Water (L) */}
                   <TableCell>
                     <TextField
                       size="small"
-                      type="number"
-                      value={detail.waterLiters || ''}
-                      onChange={(e) => updateDetailField(index, 'waterLiters', parseInt(e.target.value) || 0)}
+                      value={measurementText(detail.waterLiters)}
+                      onChange={(e) => updateDetailField(index, 'waterLiters', e.target.value)}
                       fullWidth
-                      sx={smallTextFieldStyles}
+                      inputProps={{ inputMode: 'decimal', 'aria-label': 'Water (L)' }}
+                      sx={measurementInputStyles}
                     />
                   </TableCell>
-                  {/* GOV (L) */}
                   <TableCell>
                     <TextField
                       size="small"
-                      type="number"
-                      value={detail.govLiters || ''}
-                      onChange={(e) => updateDetailField(index, 'govLiters', parseInt(e.target.value) || 0)}
+                      value={measurementText(detail.govLiters)}
+                      onChange={(e) => updateDetailField(index, 'govLiters', e.target.value)}
                       fullWidth
-                      sx={smallTextFieldStyles}
+                      inputProps={{ inputMode: 'decimal', 'aria-label': 'GOV (L)' }}
+                      sx={measurementInputStyles}
                     />
                   </TableCell>
-                  {/* Temperature */}
                   <TableCell>
                     <TextField
                       size="small"
-                      type="number"
-                      value={detail.temperatureC || ''}
+                      value={measurementText(detail.temperatureC)}
                       onChange={(e) => updateDetailField(index, 'temperatureC', e.target.value)}
                       fullWidth
-                      sx={smallTextFieldStyles}
+                      inputProps={{ inputMode: 'decimal', 'aria-label': 'Temperature' }}
+                      sx={measurementInputStyles}
                     />
                   </TableCell>
-                  {/* Density @ 20°C */}
                   <TableCell>
                     <TextField
                       size="small"
-                      type="number"
-                      value={detail.densityAt20c || ''}
+                      value={measurementText(detail.densityAt20c)}
                       onChange={(e) => updateDetailField(index, 'densityAt20c', e.target.value)}
                       fullWidth
-                      sx={smallTextFieldStyles}
+                      inputProps={{ inputMode: 'decimal', 'aria-label': 'Density at 20°C' }}
+                      sx={measurementInputStyles}
                     />
                   </TableCell>
-                  {/* Actual Density */}
                   <TableCell>
                     <TextField
                       size="small"
-                      type="number"
-                      value={detail.actualDensity || ''}
+                      value={measurementText(detail.actualDensity)}
                       onChange={(e) => updateDetailField(index, 'actualDensity', e.target.value)}
                       fullWidth
-                      sx={smallTextFieldStyles}
+                      inputProps={{ inputMode: 'decimal', 'aria-label': 'Actual Density' }}
+                      sx={measurementInputStyles}
                     />
                   </TableCell>
-                  {/* ZDNMT */}
                   <TableCell>
                     <TextField
                       size="small"
-                      type="number"
-                      value={detail.zdnmt || ''}
+                      value={measurementText(detail.zdnmt)}
                       onChange={(e) => updateDetailField(index, 'zdnmt', e.target.value)}
                       fullWidth
-                      sx={smallTextFieldStyles}
+                      inputProps={{ inputMode: 'decimal', 'aria-label': 'ZDNMT' }}
+                      sx={measurementInputStyles}
                     />
                   </TableCell>
-                  {/* Diff Zdn RWBMT */}
                   <TableCell>
                     <TextField
                       size="small"
-                      type="number"
-                      value={detail.differenceZdnRwbmt || ''}
+                      value={measurementText(detail.differenceZdnRwbmt)}
                       onChange={(e) => updateDetailField(index, 'differenceZdnRwbmt', e.target.value)}
                       fullWidth
-                      sx={smallTextFieldStyles}
+                      inputProps={{ inputMode: 'decimal', 'aria-label': 'Diff Zdn RWBMT' }}
+                      sx={measurementInputStyles}
                     />
                   </TableCell>
-                  {/* Diff Zdn RWBMT % */}
                   <TableCell>
                     <TextField
                       size="small"
-                      type="number"
-                      value={detail.differenceZdnRwbmtPercent || ''}
+                      value={measurementText(detail.differenceZdnRwbmtPercent)}
                       onChange={(e) => updateDetailField(index, 'differenceZdnRwbmtPercent', e.target.value)}
                       fullWidth
-                      sx={smallTextFieldStyles}
+                      inputProps={{ inputMode: 'decimal', 'aria-label': 'Diff Zdn RWBMT percent' }}
+                      sx={measurementInputStyles}
                     />
                   </TableCell>
                   <TableCell>

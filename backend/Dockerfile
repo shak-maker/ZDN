@@ -5,7 +5,7 @@ FROM node:20-alpine AS deps
 WORKDIR /app
 
 COPY package.json package-lock.json* ./
-RUN npm ci --ignore-scripts
+RUN if [ -f package-lock.json ]; then npm ci --ignore-scripts; else npm install --ignore-scripts; fi
 
 # =============================================================================
 # Stage 2: Builder (compile + Prisma generate)
@@ -19,8 +19,13 @@ COPY . .
 ENV npm_config_update_notifier=false \
     npm_config_audit=false
 
-# Build NestJS and generate Prisma client (needed for runtime)
-RUN npm run build && npx prisma generate
+# prisma generate reads DATABASE_URL from the schema and does not connect.
+# .env is excluded from the image, so provide a placeholder at build time.
+ENV DATABASE_URL="mysql://build:build@127.0.0.1:3306/build"
+
+# Generate the client, then compile. DATABASE_URL is only read by Prisma
+# at generate time and is not used to connect.
+RUN npx prisma generate && npm run build
 
 # =============================================================================
 # Stage 3: Production runner (runtime deps only, non-root)
@@ -37,7 +42,7 @@ ENV NODE_ENV=production \
 
 # Copy only production dependencies (smaller image, no devDependencies)
 COPY package.json package-lock.json* ./
-RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
+RUN if [ -f package-lock.json ]; then npm ci --omit=dev --ignore-scripts; else npm install --omit=dev --ignore-scripts; fi && npm cache clean --force
 
 # Copy built app and Prisma artifacts
 COPY --from=builder /app/dist ./dist

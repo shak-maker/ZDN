@@ -208,7 +208,12 @@ export class ReportsService {
       })),
     };
 
-    return this.jsonTransformation.transformToCanonicalJson(reportData);
+    const canonical = this.jsonTransformation.transformToCanonicalJson(reportData);
+    return {
+      ...canonical,
+      createdAt: report.createdAt.toISOString(),
+      updatedAt: report.updatedAt.toISOString(),
+    };
   }
 
   async findByReportNo(reportNo: string): Promise<CanonicalJsonResponse> {
