@@ -1,19 +1,19 @@
-export const MISSING_DATE_LABEL = 'Бүртгэгдээгүй';
+export const MISSING_DATE_LABEL = 'Not recorded';
 
-const utcDateOnlyFormat = new Intl.DateTimeFormat('mn-MN', {
+const utcDateOnlyFormat = new Intl.DateTimeFormat('en-US', {
   timeZone: 'UTC',
   year: 'numeric',
   month: '2-digit',
   day: '2-digit',
 });
 
-const localDateOnlyFormat = new Intl.DateTimeFormat('mn-MN', {
+const localDateOnlyFormat = new Intl.DateTimeFormat('en-US', {
   year: 'numeric',
   month: '2-digit',
   day: '2-digit',
 });
 
-const dateTimeFormat = new Intl.DateTimeFormat('mn-MN', {
+const dateTimeFormat = new Intl.DateTimeFormat('en-US', {
   year: 'numeric',
   month: '2-digit',
   day: '2-digit',
@@ -22,15 +22,15 @@ const dateTimeFormat = new Intl.DateTimeFormat('mn-MN', {
   hourCycle: 'h23',
 });
 
-const measurementFormat = new Intl.NumberFormat('mn-MN', {
+const measurementFormat = new Intl.NumberFormat('en-US', {
   maximumFractionDigits: 8,
 });
 
-const integerFormat = new Intl.NumberFormat('mn-MN', {
+const integerFormat = new Intl.NumberFormat('en-US', {
   maximumFractionDigits: 0,
 });
 
-const averageFormat = new Intl.NumberFormat('mn-MN', {
+const averageFormat = new Intl.NumberFormat('en-US', {
   minimumFractionDigits: 1,
   maximumFractionDigits: 1,
 });

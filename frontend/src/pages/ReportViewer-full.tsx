@@ -154,22 +154,22 @@ interface DetailColumn {
 }
 
 const DETAIL_COLUMNS: DetailColumn[] = [
-  { key: 'rtcNo', label: 'RTC дугаар', kind: 'text' },
-  { key: 'rwbNo', label: 'RWB дугаар', kind: 'text' },
-  { key: 'rwbmtGross', label: 'RWBMT нийт', kind: 'number' },
-  { key: 'sealNo', label: 'Лацны дугаар', kind: 'text' },
-  { key: 'type', label: 'Төрөл', kind: 'text' },
-  { key: 'dipSm', label: 'Гүн (см)', kind: 'number' },
-  { key: 'tovLiters', label: 'TOV (л)', kind: 'number' },
-  { key: 'waterSm', label: 'Ус (см)', kind: 'number' },
-  { key: 'waterLiters', label: 'Ус (л)', kind: 'number' },
-  { key: 'govLiters', label: 'GOV (л)', kind: 'number' },
-  { key: 'temperatureC', label: 'Температур', kind: 'number' },
-  { key: 'densityAt20c', label: 'Нягт (20°C)', kind: 'number' },
-  { key: 'actualDensity', label: 'Бодит нягт', kind: 'number' },
+  { key: 'rtcNo', label: 'RTC No', kind: 'text' },
+  { key: 'rwbNo', label: 'RWB No', kind: 'text' },
+  { key: 'rwbmtGross', label: 'RWBMT Gross', kind: 'number' },
+  { key: 'sealNo', label: 'Seal No', kind: 'text' },
+  { key: 'type', label: 'Type', kind: 'text' },
+  { key: 'dipSm', label: 'Dip (cm)', kind: 'number' },
+  { key: 'tovLiters', label: 'TOV (L)', kind: 'number' },
+  { key: 'waterSm', label: 'Water (cm)', kind: 'number' },
+  { key: 'waterLiters', label: 'Water (L)', kind: 'number' },
+  { key: 'govLiters', label: 'GOV (L)', kind: 'number' },
+  { key: 'temperatureC', label: 'Temperature', kind: 'number' },
+  { key: 'densityAt20c', label: 'Density @ 20°C', kind: 'number' },
+  { key: 'actualDensity', label: 'Actual Density', kind: 'number' },
   { key: 'zdnmt', label: 'ZDNMT', kind: 'number' },
-  { key: 'differenceZdnRwbmt', label: 'Зөрүү ZDN–RWBMT', kind: 'number' },
-  { key: 'differenceZdnRwbmtPercent', label: 'Зөрүү ZDN–RWBMT %', kind: 'number' },
+  { key: 'differenceZdnRwbmt', label: 'Diff Zdn RWBMT', kind: 'number' },
+  { key: 'differenceZdnRwbmtPercent', label: 'Diff Zdn RWBMT %', kind: 'number' },
 ];
 
 function mapDetail(detail: Record<string, unknown>): ReportDetail {
@@ -308,7 +308,7 @@ const ReportViewer: React.FC = () => {
       setCanonicalReport(payload);
       setReport(mapReport(payload, reportId));
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Тайланг ачаалж чадсангүй';
+      const message = err instanceof Error ? err.message : 'Failed to load report';
       setError(message);
     } finally {
       setLoading(false);
@@ -354,7 +354,7 @@ const ReportViewer: React.FC = () => {
     return (
       <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center" minHeight="400px" gap={2}>
         <CircularProgress sx={{ color: accent }} />
-        <Typography sx={{ color: muted }}>Ачаалж байна…</Typography>
+        <Typography sx={{ color: muted }}>Loading…</Typography>
       </Box>
     );
   }
@@ -363,7 +363,7 @@ const ReportViewer: React.FC = () => {
     return (
       <Box>
         <Alert severity="error" sx={{ mb: 2 }}>
-          {error || 'Тайлан олдсонгүй'}
+          {error || 'Report not found'}
         </Alert>
         <Button
           variant="outlined"
@@ -371,7 +371,7 @@ const ReportViewer: React.FC = () => {
           onClick={() => navigate('/reports')}
           sx={outlinedButtonSx}
         >
-          Тайлангууд руу буцах
+          Back to Reports
         </Button>
       </Box>
     );
@@ -399,10 +399,10 @@ const ReportViewer: React.FC = () => {
               lineHeight: 1.2,
             }}
           >
-            Тайлан {report.reportNo}
+            Report {report.reportNo}
           </Typography>
           <Typography sx={{ color: muted, mt: 0.75, fontSize: '0.95rem' }}>
-            Хэмжилтийн тайлангийн дэлгэрэнгүй
+            View and manage measurement report details
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
@@ -412,7 +412,7 @@ const ReportViewer: React.FC = () => {
             onClick={() => setJsonDialogOpen(true)}
             sx={outlinedButtonSx}
           >
-            JSON харах
+            View JSON
           </Button>
           <Button
             variant="outlined"
@@ -420,7 +420,7 @@ const ReportViewer: React.FC = () => {
             onClick={downloadJson}
             sx={outlinedButtonSx}
           >
-            JSON татах
+            Download JSON
           </Button>
           <Button
             variant="contained"
@@ -435,7 +435,7 @@ const ReportViewer: React.FC = () => {
               },
             }}
           >
-            Засах
+            Edit
           </Button>
           <Button
             variant="outlined"
@@ -443,7 +443,7 @@ const ReportViewer: React.FC = () => {
             onClick={() => navigate('/reports')}
             sx={outlinedButtonSx}
           >
-            Буцах
+            Back
           </Button>
         </Box>
       </Box>
@@ -458,7 +458,7 @@ const ReportViewer: React.FC = () => {
       >
         <Paper elevation={0} sx={{ ...panelSx, p: { xs: 3, sm: 4 } }}>
           <Typography component="h2" sx={sectionTitleSx}>
-            Тайлангийн мэдээлэл
+            Report Information
           </Typography>
           <Box
             sx={{
@@ -468,10 +468,10 @@ const ReportViewer: React.FC = () => {
               rowGap: 3,
             }}
           >
-            <Field label="Тайлангийн дугаар">{report.reportNo}</Field>
-            <Field label="Захиалагч">{formatText(report.customer)}</Field>
-            <Field label="Гэрээний дугаар">{formatText(report.contractNo)}</Field>
-            <Field label="Бүтээгдэхүүн">
+            <Field label="Report Number">{report.reportNo}</Field>
+            <Field label="Customer">{formatText(report.customer)}</Field>
+            <Field label="Contract Number">{formatText(report.contractNo)}</Field>
+            <Field label="Product">
               {report.product ? (
                 <Chip
                   label={report.product}
@@ -488,46 +488,46 @@ const ReportViewer: React.FC = () => {
                 formatText(report.product)
               )}
             </Field>
-            <Field label="Байцаагч">{formatText(report.inspector)}</Field>
-            <Field label="Гүйцэтгэсэн">{formatText(report.handledBy)}</Field>
+            <Field label="Inspector">{formatText(report.inspector)}</Field>
+            <Field label="Handled By">{formatText(report.handledBy)}</Field>
             <Box sx={{ gridColumn: { sm: '1 / -1' } }}>
-              <Field label="Байршил">{formatText(report.location)}</Field>
+              <Field label="Location">{formatText(report.location)}</Field>
             </Box>
             <Box sx={{ gridColumn: { sm: '1 / -1' } }}>
-              <Field label="Объект">{formatText(report.object)}</Field>
+              <Field label="Object">{formatText(report.object)}</Field>
             </Box>
-            <Field label="Тайлангийн огноо">{formatReportDate(report.reportDate)}</Field>
-            <Field label="Буулгалт эхэлсэн">{formatReportDate(report.dischargeCommenced)}</Field>
-            <Field label="Буулгалт дууссан">{formatReportDate(report.dischargeCompleted)}</Field>
-            <Field label="Бүрэн дууссан">{formatReportDate(report.fullCompleted)}</Field>
+            <Field label="Report Date">{formatReportDate(report.reportDate)}</Field>
+            <Field label="Discharge Commenced">{formatReportDate(report.dischargeCommenced)}</Field>
+            <Field label="Discharge Completed">{formatReportDate(report.dischargeCompleted)}</Field>
+            <Field label="Full Completed">{formatReportDate(report.fullCompleted)}</Field>
           </Box>
         </Paper>
 
         <Paper elevation={0} sx={{ ...panelSx, p: { xs: 3, sm: 4 } }}>
           <Typography component="h2" sx={sectionTitleSx}>
-            Хураангуй
+            Report Summary
           </Typography>
 
           <Typography component="h3" sx={groupLabelSx}>
-            Бүртгэл
+            Record
           </Typography>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.75 }}>
-            <SummaryRow label="Үүсгэсэн" value={formatReportDate(report.createdAt)} />
-            <SummaryRow label="Сүүлд шинэчилсэн" value={formatReportDate(report.updatedAt)} />
-            <SummaryRow label="Нийт мөр" value={formatInteger(details.length)} numeric />
+            <SummaryRow label="Created" value={formatReportDate(report.createdAt)} />
+            <SummaryRow label="Last Updated" value={formatReportDate(report.updatedAt)} />
+            <SummaryRow label="Total Details" value={formatInteger(details.length)} numeric />
           </Box>
 
           <Divider sx={{ my: 3, borderColor: line }} />
 
           <Typography component="h3" sx={groupLabelSx}>
-            Хэмжилтийн дүн
+            Measurement totals
           </Typography>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.75 }}>
-            <SummaryRow label="Нийт GOV (л)" value={formatMeasurement(totals.totalGov)} numeric />
-            <SummaryRow label="Нийт TOV (л)" value={formatMeasurement(totals.totalTov)} numeric />
-            <SummaryRow label="Нийт ус (л)" value={formatMeasurement(totals.totalWater)} numeric />
+            <SummaryRow label="Total GOV (L)" value={formatMeasurement(totals.totalGov)} numeric />
+            <SummaryRow label="Total TOV (L)" value={formatMeasurement(totals.totalTov)} numeric />
+            <SummaryRow label="Total Water (L)" value={formatMeasurement(totals.totalWater)} numeric />
             <SummaryRow
-              label="Дундаж температур (°C)"
+              label="Avg Temperature (°C)"
               value={formatAverage(totals.avgTemp)}
               numeric
             />
@@ -537,7 +537,7 @@ const ReportViewer: React.FC = () => {
 
       <Paper elevation={0} sx={{ ...panelSx, p: { xs: 3, sm: 4 }, mt: 3 }}>
         <Typography component="h2" sx={sectionTitleSx}>
-          Хэмжилтийн мөр ({formatInteger(details.length)})
+          Report Details ({formatInteger(details.length)})
         </Typography>
         {details.length > 0 && visibleColumns.length > 0 ? (
           <>
@@ -606,22 +606,22 @@ const ReportViewer: React.FC = () => {
             </TableContainer>
             {hiddenColumns.length > 0 && (
               <Typography sx={{ mt: 2, color: muted, fontSize: '0.8125rem' }}>
-                Хоосон багана нуугдсан: {hiddenColumns.map((column) => column.label).join(', ')}
+                Empty columns hidden: {hiddenColumns.map((column) => column.label).join(', ')}
               </Typography>
             )}
           </>
         ) : (
           <Typography sx={{ color: muted }}>
-            Энэ тайланд хэмжилтийн мөр байхгүй.
+            No details available for this report.
           </Typography>
         )}
       </Paper>
 
       <Dialog open={jsonDialogOpen} onClose={() => setJsonDialogOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle sx={{ color: ink }}>Тайлангийн JSON</DialogTitle>
+        <DialogTitle sx={{ color: ink }}>Report JSON</DialogTitle>
         <DialogContent>
           <DialogContentText sx={{ color: muted }}>
-            Энэ тайлангийн каноник JSON бүтэц.
+            Canonical JSON for this report.
           </DialogContentText>
           <Divider sx={{ my: 2, borderColor: line }} />
           <Box
@@ -638,15 +638,15 @@ const ReportViewer: React.FC = () => {
               color: ink,
             }}
           >
-            {canonicalReport ? JSON.stringify(canonicalReport, null, 2) : 'Ачаалж байна…'}
+            {canonicalReport ? JSON.stringify(canonicalReport, null, 2) : 'Loading…'}
           </Box>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
           <Button onClick={() => setJsonDialogOpen(false)} sx={{ color: muted }}>
-            Хаах
+            Close
           </Button>
           <Button onClick={downloadJson} startIcon={<DownloadIcon />} sx={{ color: accent }}>
-            Татах
+            Download
           </Button>
         </DialogActions>
       </Dialog>

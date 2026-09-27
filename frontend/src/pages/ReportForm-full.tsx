@@ -1,20 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { reportsApi } from '../services/api';
+import { parseReportDate, readField } from '../utils/reportDisplay';
 import {
   Box,
   Typography,
   Button,
   TextField,
   Paper,
-  Grid,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  IconButton,
   Alert,
   CircularProgress,
   Dialog,
@@ -23,16 +16,65 @@ import {
   DialogActions,
   DialogContentText,
   Divider,
+  Collapse,
 } from '@mui/material';
 import {
   Add as AddIcon,
   Delete as DeleteIcon,
   Save as SaveIcon,
-  Cancel as CancelIcon,
+  ArrowBack as ArrowBackIcon,
   Preview as PreviewIcon,
+  ExpandMore as ExpandMoreIcon,
+  ExpandLess as ExpandLessIcon,
 } from '@mui/icons-material';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import dayjs, { Dayjs } from 'dayjs';
+
+const ink = '#0f2740';
+const muted = '#5c6d7e';
+const line = '#d7e0e8';
+const accent = '#1d4e73';
+const accentHover = '#163e5c';
+const requiredMark = '#9f1239';
+const monoFamily =
+  'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace';
+
+const panelSx = {
+  borderRadius: 2,
+  backgroundColor: '#ffffff',
+  border: `1px solid ${line}`,
+  boxShadow: '0 1px 2px rgba(15, 39, 64, 0.04)',
+};
+
+const outlinedButtonSx = {
+  borderColor: line,
+  color: accent,
+  '&:hover': {
+    borderColor: accent,
+    backgroundColor: 'rgba(29, 78, 115, 0.06)',
+  },
+};
+
+const fieldSx = {
+  '& .MuiOutlinedInput-root': {
+    borderRadius: 1,
+    backgroundColor: '#fff',
+    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: accent },
+    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+      borderColor: accent,
+      borderWidth: 2,
+    },
+  },
+};
+
+const numberInputSx = {
+  ...fieldSx,
+  '& .MuiOutlinedInput-input': {
+    textAlign: 'right',
+    fontVariantNumeric: 'tabular-nums',
+    fontFamily: monoFamily,
+  },
+};
 
 interface ReportDetail {
   id?: number;
@@ -54,17 +96,6 @@ interface ReportDetail {
   waterSm?: string;
 }
 
-function measurementText(value: string | number | null | undefined): string {
-  if (value === undefined || value === null) return '';
-  return String(value);
-}
-
-function literForPayload(value: string | number | null | undefined): number {
-  if (value === undefined || value === null || value === '') return 0;
-  const parsed = typeof value === 'number' ? value : Number(value);
-  return Number.isFinite(parsed) ? parsed : 0;
-}
-
 interface Report {
   id?: number;
   contractNo?: string;
@@ -84,80 +115,154 @@ interface Report {
   updatedAt?: string;
 }
 
+type DetailKey = keyof ReportDetail;
+type FieldKind = 'text' | 'number';
+
+interface DetailField {
+  key: DetailKey;
+  label: string;
+  kind: FieldKind;
+}
+
+const PRIMARY_FIELDS: DetailField[] = [
+  { key: 'rtcNo', label: 'RTC No', kind: 'text' },
+  { key: 'rwbNo', label: 'RWB No', kind: 'text' },
+  { key: 'type', label: 'Type', kind: 'text' },
+  { key: 'dipSm', label: 'Dip (cm)', kind: 'number' },
+  { key: 'tovLiters', label: 'TOV (L)', kind: 'number' },
+  { key: 'waterSm', label: 'Water (cm)', kind: 'number' },
+  { key: 'waterLiters', label: 'Water (L)', kind: 'number' },
+  { key: 'govLiters', label: 'GOV (L)', kind: 'number' },
+  { key: 'temperatureC', label: 'Temperature', kind: 'number' },
+  { key: 'densityAt20c', label: 'Density @ 20°C', kind: 'number' },
+  { key: 'actualDensity', label: 'Actual Density', kind: 'number' },
+  { key: 'zdnmt', label: 'ZDNMT', kind: 'number' },
+];
+
+const EXTRA_FIELDS: DetailField[] = [
+  { key: 'rwbmtGross', label: 'RWBMT Gross', kind: 'number' },
+  { key: 'sealNo', label: 'Seal No', kind: 'text' },
+  { key: 'differenceZdnRwbmt', label: 'Diff Zdn RWBMT', kind: 'number' },
+  { key: 'differenceZdnRwbmtPercent', label: 'Diff Zdn RWBMT %', kind: 'number' },
+];
+
+function measurementText(value: string | number | null | undefined): string {
+  if (value === undefined || value === null) return '';
+  return String(value);
+}
+
+function literForPayload(value: string | number | null | undefined): number {
+  if (value === undefined || value === null || value === '') return 0;
+  const parsed = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function formDate(value: unknown): string {
+  if (value == null || String(value).trim() === '') return '';
+  const parsed = parseReportDate(String(value));
+  return parsed ? parsed.date.toISOString() : String(value);
+}
+
+function mapDetail(detail: Record<string, unknown>): ReportDetail {
+  const text = (keys: string[]) => measurementText(readField(detail, keys));
+  const measure = (keys: string[]) => readField(detail, keys) ?? '';
+  return {
+    actualDensity: text(['ActualDensity', 'actualDensity']),
+    zdnmt: text(['ZDNMT', 'zdnmt']),
+    densityAt20c: text(['DensityAt20c', 'densityAt20c']),
+    differenceZdnRwbmt: text([
+      'DifferenceZdnRWBMT',
+      'diffTon',
+      'DiffrenceAmberRWBMT',
+    ]),
+    differenceZdnRwbmtPercent: text([
+      'DifferenceZdnRWBMTProcent',
+      'diffTonProcent',
+      'DiffrenceAmberRWBMTProcent',
+    ]),
+    dipSm: text(['DipSm', 'dipSm']),
+    govLiters: measure(['GOVLtr', 'govLiters']),
+    rtcNo: text(['RTCNo', 'tankNo', 'rtcNo']),
+    rwbmtGross: text(['RWBMTGross', 'documentWeight', 'rwbmtGross']),
+    rwbNo: text(['RWBNo', 'billNo', 'rwbNo']),
+    sealNo: text(['SealNo', 'sealNo']),
+    tovLiters: measure(['TOVltr', 'tovLiters']),
+    temperatureC: text(['Temperature', 'Temprature', 'temperatureC']),
+    type: text(['Type', 'type']),
+    waterLiters: measure(['WaterLtr', 'waterLiters']),
+    waterSm: text(['WaterSm', 'waterSm']),
+  };
+}
+
+function hasExtraValues(detail: ReportDetail): boolean {
+  return EXTRA_FIELDS.some((field) => measurementText(detail[field.key] as string | number).trim() !== '');
+}
+
+function missingRequired(form: Partial<Report>): string[] {
+  const missing: string[] = [];
+  if (!form.reportNo?.trim()) missing.push('Report Number');
+  if (!form.customer?.trim()) missing.push('Customer');
+  if (!form.product?.trim()) missing.push('Product');
+  if (!form.inspector?.trim()) missing.push('Inspector');
+  if (!form.reportDate) missing.push('Report Date');
+  if (!form.reportDetails || form.reportDetails.length === 0) missing.push('Report Details');
+  return missing;
+}
+
+function FieldLabel({
+  htmlFor,
+  children,
+  required = false,
+}: {
+  htmlFor: string;
+  children: React.ReactNode;
+  required?: boolean;
+}) {
+  return (
+    <Typography
+      component="label"
+      htmlFor={htmlFor}
+      sx={{
+        display: 'block',
+        mb: 0.75,
+        color: muted,
+        fontSize: '0.75rem',
+        fontWeight: 600,
+        lineHeight: 1.4,
+      }}
+    >
+      {children}
+      {required && (
+        <Box component="span" sx={{ color: requiredMark, ml: 0.4 }} aria-hidden="true">
+          *
+        </Box>
+      )}
+    </Typography>
+  );
+}
+
+function SectionHeading({ children }: { children: React.ReactNode }) {
+  return (
+    <Typography
+      component="h3"
+      sx={{
+        fontSize: '0.8rem',
+        fontWeight: 700,
+        letterSpacing: '0.04em',
+        color: accent,
+        mb: 2,
+      }}
+    >
+      {children}
+    </Typography>
+  );
+}
+
 const ReportForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const isEdit = Boolean(id);
   const navigate = useNavigate();
-
-  const textFieldStyles = {
-    '& .MuiOutlinedInput-root': {
-      borderRadius: 2,
-      '&:hover': {
-        '& .MuiOutlinedInput-notchedOutline': {
-          borderColor: '#667eea',
-        },
-      },
-      '&.Mui-focused': {
-        '& .MuiOutlinedInput-notchedOutline': {
-          borderColor: '#667eea',
-          borderWidth: 2,
-        },
-      },
-    },
-    '& .MuiInputLabel-root.Mui-focused': {
-      color: '#667eea',
-    },
-  };
-
-  const measurementInputStyles = {
-    '& .MuiOutlinedInput-root': {
-      borderRadius: 1,
-      minWidth: '16ch',
-      '&:hover': {
-        '& .MuiOutlinedInput-notchedOutline': {
-          borderColor: '#667eea',
-        },
-      },
-      '&.Mui-focused': {
-        '& .MuiOutlinedInput-notchedOutline': {
-          borderColor: '#667eea',
-          borderWidth: 2,
-        },
-      },
-    },
-    '& .MuiOutlinedInput-input': {
-      textAlign: 'right',
-      fontVariantNumeric: 'tabular-nums',
-      fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-      py: 1.25,
-    },
-  };
-
-  const headerCellSx = {
-    fontWeight: 600,
-    color: '#667eea',
-    whiteSpace: 'nowrap',
-    backgroundColor: '#f7f8fe',
-    zIndex: 2,
-  };
-
-  const wideTextFieldStyles = {
-    '& .MuiOutlinedInput-root': {
-      borderRadius: 1,
-      minWidth: '150px', // Even wider for fields that can have long values
-      '&:hover': {
-        '& .MuiOutlinedInput-notchedOutline': {
-          borderColor: '#667eea',
-        },
-      },
-      '&.Mui-focused': {
-        '& .MuiOutlinedInput-notchedOutline': {
-          borderColor: '#667eea',
-          borderWidth: 2,
-        },
-      },
-    },
-  };
+  const nextRowId = useRef(1);
 
   const [formData, setFormData] = useState<Partial<Report>>({
     contractNo: '',
@@ -174,20 +279,27 @@ const ReportForm: React.FC = () => {
     reportNo: '',
     reportDetails: [],
   });
-
+  const [rowIds, setRowIds] = useState<string[]>([]);
+  const [extraOpen, setExtraOpen] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [previewOpen, setPreviewOpen] = useState(false);
   const [jsonPreview, setJsonPreview] = useState('');
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const pendingFocusId = useRef<string | null>(null);
+
+  const newRowId = () => {
+    const rowId = `row-${nextRowId.current}`;
+    nextRowId.current += 1;
+    return rowId;
+  };
 
   useEffect(() => {
     if (isEdit && id) {
-      fetchReport(parseInt(id));
+      fetchReport(parseInt(id, 10));
     }
   }, [id, isEdit]);
 
-  // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.ctrlKey || event.metaKey) {
@@ -208,69 +320,97 @@ const ReportForm: React.FC = () => {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [formData]);
 
+  useEffect(() => {
+    if (!pendingFocusId.current) return;
+    const fieldId = `detail-${pendingFocusId.current}-rtcNo`;
+    pendingFocusId.current = null;
+    document.getElementById(fieldId)?.focus();
+  }, [rowIds]);
+
   const fetchReport = async (reportId: number) => {
     try {
       setLoading(true);
       const response = await reportsApi.getById(reportId);
-      const canonicalData: any = response.data;
-      
-      // Convert canonical format to legacy format for form
-      const report: Report = {
-        contractNo: canonicalData.Hemjilt?.ContractNo,
-        customer: canonicalData.Hemjilt?.Customer,
-        dischargeCommenced: canonicalData.Hemjilt?.DischargeCommenced,
-        dischargeCompleted: canonicalData.Hemjilt?.DischargeCompleted,
-        fullCompleted: canonicalData.Hemjilt?.FullCompleted,
-        handledBy: canonicalData.Hemjilt?.HandledBy,
-        inspector: canonicalData.Inspector,
-        location: canonicalData.Location,
-        object: canonicalData.Object,
-        product: canonicalData.Product,
-        reportDate: canonicalData.ReportDate,
-        reportNo: canonicalData.ReportNo,
-        reportDetails: canonicalData.Hemjilt?.HemjiltDetails?.map((detail: any) => ({
-          actualDensity: detail.ActualDensity,
-          zdnmt: detail.ZDNMT,
-          densityAt20c: detail.DensityAt20c,
-          differenceZdnRwbmt: detail.DifferenceZdnRWBMT,
-          differenceZdnRwbmtPercent: detail.DifferenceZdnRWBMTProcent,
-          dipSm: detail.DipSm,
-          govLiters: detail.GOVLtr ?? '',
-          rtcNo: detail.RTCNo,
-          rwbmtGross: detail.RWBMTGross,
-          rwbNo: detail.RWBNo,
-          sealNo: detail.SealNo,
-          tovLiters: detail.TOVltr ?? '',
-          temperatureC: detail.Temperature,
-          type: detail.Type,
-          waterLiters: detail.WaterLtr ?? '',
-          waterSm: detail.WaterSm,
-        })) || [],
+      const canonicalData = response.data as {
+        Inspector?: string;
+        Location?: string;
+        Object?: string;
+        Product?: string;
+        ReportDate?: string;
+        ReportNo?: string;
+        Hemjilt?: {
+          ContractNo?: string;
+          Customer?: string;
+          DischargeCommenced?: string;
+          DischargeCompleted?: string;
+          FullCompleted?: string;
+          HandledBy?: string;
+          Inspector?: string;
+          Location?: string;
+          Object?: string;
+          Product?: string;
+          ReportDate?: string;
+          ReportNo?: string;
+          HemjiltDetails?: Array<Record<string, unknown>>;
+        };
       };
-      
-      setFormData(report);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch report');
+      const hemjilt = canonicalData.Hemjilt ?? {};
+      const details = (hemjilt.HemjiltDetails ?? []).map(mapDetail);
+      const ids = details.map(() => newRowId());
+      const open: Record<string, boolean> = {};
+      details.forEach((detail, index) => {
+        if (hasExtraValues(detail)) open[ids[index]] = true;
+      });
+
+      setRowIds(ids);
+      setExtraOpen(open);
+      setFormData({
+        contractNo: hemjilt.ContractNo || '',
+        customer: hemjilt.Customer || '',
+        dischargeCommenced: formDate(hemjilt.DischargeCommenced),
+        dischargeCompleted: formDate(hemjilt.DischargeCompleted),
+        fullCompleted: formDate(hemjilt.FullCompleted),
+        handledBy: hemjilt.HandledBy || '',
+        inspector: hemjilt.Inspector || canonicalData.Inspector || '',
+        location: hemjilt.Location || canonicalData.Location || '',
+        object: hemjilt.Object || canonicalData.Object || '',
+        product: hemjilt.Product || canonicalData.Product || '',
+        reportDate: formDate(hemjilt.ReportDate || canonicalData.ReportDate),
+        reportNo: hemjilt.ReportNo || canonicalData.ReportNo || '',
+        reportDetails: details,
+      });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to load report';
+      setError(message);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleInputChange = (field: keyof Report, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value,
-    }));
+  const clearFieldError = (field: string) => {
+    setValidationErrors((prev) => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
+
+  const handleInputChange = (field: keyof Report, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    clearFieldError(field);
   };
 
   const handleDateChange = (field: keyof Report, value: Dayjs | null) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [field]: value ? value.toISOString() : '',
     }));
+    clearFieldError(field);
   };
 
   const addDetailRow = () => {
+    const rowId = newRowId();
     const newDetail: ReportDetail = {
       actualDensity: '',
       zdnmt: '',
@@ -290,55 +430,62 @@ const ReportForm: React.FC = () => {
       waterSm: '',
     };
 
-    setFormData(prev => ({
+    pendingFocusId.current = rowId;
+    setRowIds((prev) => [...prev, rowId]);
+    setFormData((prev) => ({
       ...prev,
       reportDetails: [...(prev.reportDetails || []), newDetail],
     }));
+    clearFieldError('reportDetails');
   };
 
   const removeDetailRow = (index: number) => {
-    setFormData(prev => ({
+    const removedId = rowIds[index];
+    setRowIds((prev) => prev.filter((_, i) => i !== index));
+    setExtraOpen((prev) => {
+      if (!removedId || !prev[removedId]) return prev;
+      const next = { ...prev };
+      delete next[removedId];
+      return next;
+    });
+    setFormData((prev) => ({
       ...prev,
       reportDetails: prev.reportDetails?.filter((_, i) => i !== index) || [],
     }));
   };
 
-  const updateDetailField = (index: number, field: keyof ReportDetail, value: any) => {
-    setFormData(prev => ({
+  const updateDetailField = (index: number, field: DetailKey, value: string) => {
+    setFormData((prev) => ({
       ...prev,
-      reportDetails: prev.reportDetails?.map((detail, i) =>
-        i === index ? { ...detail, [field]: value } : detail
-      ) || [],
+      reportDetails:
+        prev.reportDetails?.map((detail, i) =>
+          i === index ? { ...detail, [field]: value } : detail,
+        ) || [],
     }));
   };
 
   const validateForm = () => {
     const errors: Record<string, string> = {};
-    
+
     if (!formData.reportNo?.trim()) {
       errors.reportNo = 'Report number is required';
     }
-    
     if (!formData.customer?.trim()) {
       errors.customer = 'Customer is required';
     }
-    
     if (!formData.inspector?.trim()) {
       errors.inspector = 'Inspector is required';
     }
-    
     if (!formData.product?.trim()) {
       errors.product = 'Product is required';
     }
-    
     if (!formData.reportDate) {
       errors.reportDate = 'Report date is required';
     }
-    
     if (!formData.reportDetails || formData.reportDetails.length === 0) {
       errors.reportDetails = 'At least one report detail is required';
     }
-    
+
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -351,11 +498,17 @@ const ReportForm: React.FC = () => {
       Hemjilt: {
         ContractNo: formData.contractNo || '',
         Customer: formData.customer || '',
-        DischargeCommenced: formData.dischargeCommenced ? dayjs(formData.dischargeCommenced).format('YYYY-MM-DD HH:mm:ss') : '',
-        DischargeCompleted: formData.dischargeCompleted ? dayjs(formData.dischargeCompleted).format('YYYY-MM-DD HH:mm:ss') : '',
-        FullCompleted: formData.fullCompleted ? dayjs(formData.fullCompleted).format('YYYY-MM-DD HH:mm:ss') : '',
+        DischargeCommenced: formData.dischargeCommenced
+          ? dayjs(formData.dischargeCommenced).format('YYYY-MM-DD HH:mm:ss')
+          : '',
+        DischargeCompleted: formData.dischargeCompleted
+          ? dayjs(formData.dischargeCompleted).format('YYYY-MM-DD HH:mm:ss')
+          : '',
+        FullCompleted: formData.fullCompleted
+          ? dayjs(formData.fullCompleted).format('YYYY-MM-DD HH:mm:ss')
+          : '',
         HandledBy: formData.handledBy || '',
-        HemjiltDetails: (formData.reportDetails || []).map(detail => ({
+        HemjiltDetails: (formData.reportDetails || []).map((detail) => ({
           ActualDensity: detail.actualDensity || '0',
           ZDNMT: detail.zdnmt || '0',
           DensityAt20c: detail.densityAt20c || '0',
@@ -377,7 +530,9 @@ const ReportForm: React.FC = () => {
         Location: formData.location || '',
         Object: formData.object || '',
         Product: formData.product || '',
-        ReportDate: formData.reportDate ? dayjs(formData.reportDate).format('YYYY-MM-DD HH:mm:ss') : '',
+        ReportDate: formData.reportDate
+          ? dayjs(formData.reportDate).format('YYYY-MM-DD HH:mm:ss')
+          : '',
         ReportNo: formData.reportNo || '',
       },
     };
@@ -387,7 +542,9 @@ const ReportForm: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!validateForm()) {
-      setError('Please fix the validation errors before submitting');
+      const missing = missingRequired(formData);
+      setError(`Missing required fields: ${missing.join(', ')}`);
+      window.scrollTo({ top: 0 });
       return;
     }
 
@@ -407,134 +564,151 @@ const ReportForm: React.FC = () => {
       };
 
       if (isEdit && id) {
-        const reportId = parseInt(id);
+        const reportId = parseInt(id, 10);
         if (isNaN(reportId)) {
           throw new Error('Invalid report ID');
         }
-        await reportsApi.update(reportId, payload as any);
+        await reportsApi.update(reportId, payload as Report);
       } else {
-        await reportsApi.create(payload as any);
+        await reportsApi.create(payload as Report);
       }
 
       navigate('/reports');
-    } catch (err: any) {
-      setError(err.message || 'Failed to save report');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to save report';
+      setError(message);
     } finally {
       setLoading(false);
     }
   };
 
+  const missing = missingRequired(formData);
+  const details = formData.reportDetails || [];
+
+  const renderDetailFields = (detail: ReportDetail, index: number, fields: DetailField[]) => (
+    <Box
+      sx={{
+        display: 'grid',
+        gridTemplateColumns: {
+          xs: '1fr',
+          sm: 'repeat(2, minmax(0, 1fr))',
+          lg: 'repeat(3, minmax(0, 1fr))',
+        },
+        columnGap: 3,
+        rowGap: 2.5,
+      }}
+    >
+      {fields.map((field) => {
+        const fieldId = `detail-${rowIds[index]}-${field.key}`;
+        return (
+          <Box key={field.key} sx={{ minWidth: 0 }}>
+            <FieldLabel htmlFor={fieldId}>{field.label}</FieldLabel>
+            <TextField
+              id={fieldId}
+              size="small"
+              fullWidth
+              hiddenLabel
+              value={measurementText(detail[field.key] as string | number)}
+              onChange={(event) => updateDetailField(index, field.key, event.target.value)}
+              inputProps={{
+                inputMode: field.kind === 'number' ? 'decimal' : 'text',
+              }}
+              sx={field.kind === 'number' ? numberInputSx : fieldSx}
+            />
+          </Box>
+        );
+      })}
+    </Box>
+  );
+
   if (loading && isEdit) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <CircularProgress />
+      <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center" minHeight="400px" gap={2}>
+        <CircularProgress sx={{ color: accent }} />
+        <Typography sx={{ color: muted }}>Loading…</Typography>
       </Box>
     );
   }
 
   return (
-    <Box sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
-      <Box 
-        display="flex" 
-        justifyContent="space-between" 
-        alignItems="center" 
+    <Box>
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems={{ xs: 'stretch', md: 'flex-start' }}
         mb={4}
-        sx={{
-          flexDirection: { xs: 'column', sm: 'row' },
-          gap: { xs: 2, sm: 0 },
-        }}
+        gap={2}
+        sx={{ flexDirection: { xs: 'column', md: 'row' } }}
       >
         <Box>
-          <Typography 
-            variant="h3" 
+          <Typography
+            variant="h4"
             component="h1"
             sx={{
               fontWeight: 700,
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              backgroundClip: 'text',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              fontSize: { xs: '1.8rem', sm: '2.2rem', md: '2.5rem' },
+              color: ink,
+              fontSize: { xs: '1.6rem', sm: '1.85rem' },
+              letterSpacing: '-0.02em',
+              lineHeight: 1.2,
             }}
           >
             {isEdit ? 'Edit Report' : 'New Report'}
           </Typography>
-          <Typography 
-            variant="h6" 
-            color="text.secondary"
-            sx={{ 
-              fontWeight: 400,
-              fontSize: { xs: '0.9rem', sm: '1rem', md: '1.1rem' },
-            }}
-          >
-            {isEdit ? 'Update existing measurement report' : 'Create a new measurement report'}
+          <Typography sx={{ color: muted, mt: 0.75, fontSize: '0.95rem' }}>
+            {isEdit ? 'Update an existing measurement report' : 'Create a new measurement report'}
           </Typography>
-          <Typography 
-            variant="caption" 
-            color="text.secondary"
-            sx={{ 
-              fontSize: { xs: '0.7rem', sm: '0.8rem' },
-              mt: 1,
-              display: 'block',
-            }}
-          >
-            💡 Keyboard shortcuts: Ctrl+S (Save), Ctrl+P (Preview JSON)
+          <Typography sx={{ color: muted, mt: 1, fontSize: '0.8rem' }}>
+            Keyboard shortcuts: Ctrl+S (Save), Ctrl+P (Preview JSON)
           </Typography>
         </Box>
-        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-          <Button
-            variant="outlined"
-            startIcon={<PreviewIcon />}
-            onClick={generateJsonPreview}
-            sx={{
-              borderColor: '#667eea',
-              color: '#667eea',
-              '&:hover': {
-                borderColor: '#5a6fd8',
-                backgroundColor: 'rgba(102, 126, 234, 0.1)',
-              },
-            }}
-          >
-            Preview JSON
-          </Button>
-          <Button
-            variant="outlined"
-            startIcon={<CancelIcon />}
-            onClick={() => navigate('/reports')}
-            sx={{
-              borderColor: '#dc3545',
-              color: '#dc3545',
-              '&:hover': {
-                borderColor: '#c82333',
-                backgroundColor: 'rgba(220, 53, 69, 0.1)',
-              },
-            }}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="contained"
-            startIcon={<SaveIcon />}
-            onClick={handleSubmit}
-            disabled={loading}
-            sx={{
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              boxShadow: '0 8px 32px rgba(102, 126, 234, 0.3)',
-              '&:hover': {
-                background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
-                boxShadow: '0 12px 40px rgba(102, 126, 234, 0.4)',
-                transform: 'translateY(-2px)',
-              },
-              '&:disabled': {
-                background: 'rgba(102, 126, 234, 0.3)',
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: { md: 'flex-end' }, gap: 1.25 }}>
+          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+            <Button
+              type="button"
+              variant="outlined"
+              startIcon={<PreviewIcon />}
+              onClick={generateJsonPreview}
+              sx={outlinedButtonSx}
+            >
+              Preview JSON
+            </Button>
+            <Button
+              type="button"
+              variant="outlined"
+              startIcon={<ArrowBackIcon />}
+              onClick={() => navigate('/reports')}
+              sx={{
+                borderColor: '#cbd5e1',
+                color: '#475569',
+                '&:hover': {
+                  borderColor: '#94a3b8',
+                  backgroundColor: 'rgba(71, 85, 105, 0.06)',
+                },
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="contained"
+              startIcon={loading ? undefined : <SaveIcon />}
+              onClick={handleSubmit}
+              disabled={loading}
+              sx={{
+                backgroundColor: accent,
                 boxShadow: 'none',
-                transform: 'none',
-              },
-              transition: 'all 0.3s ease',
-            }}
-          >
-            {loading ? <CircularProgress size={20} /> : 'Save'}
-          </Button>
+                '&:hover': { backgroundColor: accentHover, boxShadow: 'none' },
+                '&.Mui-disabled': { backgroundColor: 'rgba(29, 78, 115, 0.35)', color: '#fff' },
+              }}
+            >
+              {loading ? <CircularProgress size={20} sx={{ color: '#fff' }} /> : 'Save'}
+            </Button>
+          </Box>
+          <Typography sx={{ color: missing.length ? muted : '#3f6f56', fontSize: '0.8rem', textAlign: { md: 'right' } }}>
+            {missing.length === 0
+              ? 'All required fields are filled'
+              : `Missing required (${missing.length}): ${missing.join(', ')}`}
+          </Typography>
         </Box>
       </Box>
 
@@ -544,465 +718,344 @@ const ReportForm: React.FC = () => {
         </Alert>
       )}
 
-      <Paper 
-        elevation={8}
-        sx={{ 
-          p: { xs: 2, sm: 3, md: 4 }, 
-          mb: 3,
-          borderRadius: 3,
-          background: 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
-        }}
-      >
-        <Typography 
-          variant="h5" 
-          gutterBottom
-          sx={{
-            fontWeight: 600,
-            color: '#667eea',
-            mb: 3,
-          }}
-        >
+      <Paper elevation={0} sx={{ ...panelSx, p: { xs: 3, sm: 4 }, mb: 3 }}>
+        <Typography component="h2" sx={{ fontWeight: 600, color: accent, fontSize: '1.15rem', mb: 3 }}>
           Report Information
         </Typography>
-        <Grid container spacing={3}>
-          <Grid item xs={12} sm={6}>
+
+        <SectionHeading>Identifiers</SectionHeading>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
+            columnGap: 4,
+            rowGap: 3,
+          }}
+        >
+          <Box>
+            <FieldLabel htmlFor="report-no" required>
+              Report Number
+            </FieldLabel>
             <TextField
+              id="report-no"
               fullWidth
-              label="Report Number *"
+              hiddenLabel
               value={formData.reportNo || ''}
-              onChange={(e) => handleInputChange('reportNo', e.target.value)}
-              required
+              inputProps={{ 'aria-required': true }}
+              onChange={(event) => handleInputChange('reportNo', event.target.value)}
               error={!!validationErrors.reportNo}
               helperText={validationErrors.reportNo}
-              sx={textFieldStyles}
+              sx={fieldSx}
             />
-          </Grid>
-          <Grid item xs={12} sm={6}>
+          </Box>
+          <Box>
+            <FieldLabel htmlFor="customer" required>
+              Customer
+            </FieldLabel>
             <TextField
+              id="customer"
               fullWidth
-              label="Customer *"
+              hiddenLabel
               value={formData.customer || ''}
-              onChange={(e) => handleInputChange('customer', e.target.value)}
+              inputProps={{ 'aria-required': true }}
+              onChange={(event) => handleInputChange('customer', event.target.value)}
               error={!!validationErrors.customer}
               helperText={validationErrors.customer}
-              sx={textFieldStyles}
+              sx={fieldSx}
             />
-          </Grid>
-          <Grid item xs={12} sm={6}>
+          </Box>
+          <Box sx={{ gridColumn: { sm: '1 / -1' } }}>
+            <FieldLabel htmlFor="contract-no">Contract Number</FieldLabel>
             <TextField
+              id="contract-no"
               fullWidth
-              label="Contract Number"
+              hiddenLabel
               value={formData.contractNo || ''}
-              onChange={(e) => handleInputChange('contractNo', e.target.value)}
-              sx={textFieldStyles}
+              onChange={(event) => handleInputChange('contractNo', event.target.value)}
+              sx={fieldSx}
             />
-          </Grid>
-          <Grid item xs={12} sm={6}>
+          </Box>
+        </Box>
+
+        <Divider sx={{ my: 4, borderColor: line }} />
+
+        <SectionHeading>Assignment</SectionHeading>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
+            columnGap: 4,
+            rowGap: 3,
+          }}
+        >
+          <Box>
+            <FieldLabel htmlFor="product" required>
+              Product
+            </FieldLabel>
             <TextField
+              id="product"
               fullWidth
-              label="Product *"
+              hiddenLabel
               value={formData.product || ''}
-              onChange={(e) => handleInputChange('product', e.target.value)}
+              inputProps={{ 'aria-required': true }}
+              onChange={(event) => handleInputChange('product', event.target.value)}
               error={!!validationErrors.product}
               helperText={validationErrors.product}
-              sx={textFieldStyles}
+              sx={fieldSx}
             />
-          </Grid>
-          <Grid item xs={12} sm={6}>
+          </Box>
+          <Box>
+            <FieldLabel htmlFor="inspector" required>
+              Inspector
+            </FieldLabel>
             <TextField
+              id="inspector"
               fullWidth
-              label="Inspector *"
+              hiddenLabel
               value={formData.inspector || ''}
-              onChange={(e) => handleInputChange('inspector', e.target.value)}
+              inputProps={{ 'aria-required': true }}
+              onChange={(event) => handleInputChange('inspector', event.target.value)}
               error={!!validationErrors.inspector}
               helperText={validationErrors.inspector}
-              sx={textFieldStyles}
+              sx={fieldSx}
             />
-          </Grid>
-          <Grid item xs={12} sm={6}>
+          </Box>
+          <Box sx={{ gridColumn: { sm: '1 / -1' } }}>
+            <FieldLabel htmlFor="handled-by">Handled By</FieldLabel>
             <TextField
+              id="handled-by"
               fullWidth
-              label="Handled By"
+              hiddenLabel
               value={formData.handledBy || ''}
-              onChange={(e) => handleInputChange('handledBy', e.target.value)}
-              sx={textFieldStyles}
+              onChange={(event) => handleInputChange('handledBy', event.target.value)}
+              sx={fieldSx}
             />
-          </Grid>
-          <Grid item xs={12}>
+          </Box>
+          <Box sx={{ gridColumn: { sm: '1 / -1' } }}>
+            <FieldLabel htmlFor="location">Location</FieldLabel>
             <TextField
+              id="location"
               fullWidth
-              label="Location"
+              hiddenLabel
               value={formData.location || ''}
-              onChange={(e) => handleInputChange('location', e.target.value)}
-              sx={textFieldStyles}
+              onChange={(event) => handleInputChange('location', event.target.value)}
+              sx={fieldSx}
             />
-          </Grid>
-          <Grid item xs={12}>
+          </Box>
+          <Box sx={{ gridColumn: { sm: '1 / -1' } }}>
+            <FieldLabel htmlFor="object">Object</FieldLabel>
             <TextField
+              id="object"
               fullWidth
-              label="Object"
+              hiddenLabel
               value={formData.object || ''}
-              onChange={(e) => handleInputChange('object', e.target.value)}
-              sx={textFieldStyles}
+              onChange={(event) => handleInputChange('object', event.target.value)}
+              sx={fieldSx}
             />
-          </Grid>
-          <Grid item xs={12} sm={4}>
+          </Box>
+        </Box>
+
+        <Divider sx={{ my: 4, borderColor: line }} />
+
+        <SectionHeading>Dates</SectionHeading>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+            columnGap: 4,
+            rowGap: 3,
+          }}
+        >
+          <Box>
+            <FieldLabel htmlFor="report-date" required>
+              Report Date
+            </FieldLabel>
             <DateTimePicker
-              label="Report Date *"
               value={formData.reportDate ? dayjs(formData.reportDate) : null}
               onChange={(value) => handleDateChange('reportDate', value)}
-              slotProps={{ 
-                textField: { 
+              slotProps={{
+                textField: {
+                  id: 'report-date',
                   fullWidth: true,
+                  hiddenLabel: true,
+                  inputProps: { 'aria-required': true },
                   error: !!validationErrors.reportDate,
                   helperText: validationErrors.reportDate,
-                } 
+                  sx: fieldSx,
+                },
               }}
             />
-          </Grid>
-          <Grid item xs={12} sm={4}>
+          </Box>
+          <Box>
+            <FieldLabel htmlFor="discharge-commenced">Discharge Commenced</FieldLabel>
             <DateTimePicker
-              label="Discharge Commenced"
               value={formData.dischargeCommenced ? dayjs(formData.dischargeCommenced) : null}
               onChange={(value) => handleDateChange('dischargeCommenced', value)}
-              slotProps={{ textField: { fullWidth: true } }}
+              slotProps={{
+                textField: { id: 'discharge-commenced', fullWidth: true, hiddenLabel: true, sx: fieldSx },
+              }}
             />
-          </Grid>
-          <Grid item xs={12} sm={4}>
+          </Box>
+          <Box>
+            <FieldLabel htmlFor="discharge-completed">Discharge Completed</FieldLabel>
             <DateTimePicker
-              label="Discharge Completed"
               value={formData.dischargeCompleted ? dayjs(formData.dischargeCompleted) : null}
               onChange={(value) => handleDateChange('dischargeCompleted', value)}
-              slotProps={{ textField: { fullWidth: true } }}
+              slotProps={{
+                textField: { id: 'discharge-completed', fullWidth: true, hiddenLabel: true, sx: fieldSx },
+              }}
             />
-          </Grid>
-          <Grid item xs={12} sm={6}>
+          </Box>
+          <Box>
+            <FieldLabel htmlFor="full-completed">Full Completed</FieldLabel>
             <DateTimePicker
-              label="Full Completed"
               value={formData.fullCompleted ? dayjs(formData.fullCompleted) : null}
               onChange={(value) => handleDateChange('fullCompleted', value)}
-              slotProps={{ textField: { fullWidth: true } }}
+              slotProps={{
+                textField: { id: 'full-completed', fullWidth: true, hiddenLabel: true, sx: fieldSx },
+              }}
             />
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
       </Paper>
 
-      <Paper 
-        elevation={8}
-        sx={{ 
-          p: { xs: 2, sm: 3, md: 4 },
-          borderRadius: 3,
-          background: 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
-        }}
-      >
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+      <Paper elevation={0} sx={{ ...panelSx, p: { xs: 3, sm: 4 } }}>
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems={{ xs: 'stretch', sm: 'center' }}
+          gap={2}
+          mb={3}
+          sx={{ flexDirection: { xs: 'column', sm: 'row' } }}
+        >
           <Box>
-            <Typography 
-              variant="h5"
-              sx={{
-                fontWeight: 600,
-                color: '#667eea',
-              }}
-            >
-              Report Details *
+            <Typography component="h2" sx={{ fontWeight: 600, color: accent, fontSize: '1.15rem' }}>
+              Report Details
+              <Box component="span" sx={{ color: requiredMark, ml: 0.4 }} aria-hidden="true">
+                *
+              </Box>
             </Typography>
             {validationErrors.reportDetails && (
-              <Typography 
-                variant="body2" 
-                color="error" 
-                sx={{ mt: 1 }}
-              >
+              <Typography variant="body2" color="error" sx={{ mt: 1 }}>
                 {validationErrors.reportDetails}
               </Typography>
             )}
           </Box>
           <Button
+            type="button"
             variant="contained"
             startIcon={<AddIcon />}
             onClick={addDetailRow}
-            size="small"
             sx={{
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              boxShadow: '0 4px 16px rgba(102, 126, 234, 0.3)',
-              '&:hover': {
-                background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
-                boxShadow: '0 6px 20px rgba(102, 126, 234, 0.4)',
-                transform: 'translateY(-1px)',
-              },
-              transition: 'all 0.3s ease',
+              alignSelf: { xs: 'flex-start', sm: 'center' },
+              backgroundColor: accent,
+              boxShadow: 'none',
+              '&:hover': { backgroundColor: accentHover, boxShadow: 'none' },
             }}
           >
             Add Detail
           </Button>
         </Box>
 
-        <TableContainer
-          sx={{
-            borderRadius: 2,
-            border: '1px solid rgba(102, 126, 234, 0.1)',
-            maxWidth: '100%',
-            maxHeight: '70vh',
-            overflow: 'auto',
-            '&::-webkit-scrollbar': {
-              height: '8px',
-              width: '8px',
-            },
-            '&::-webkit-scrollbar-track': {
-              backgroundColor: 'rgba(102, 126, 234, 0.1)',
-              borderRadius: '4px',
-            },
-            '&::-webkit-scrollbar-thumb': {
-              backgroundColor: 'rgba(102, 126, 234, 0.3)',
-              borderRadius: '4px',
-              '&:hover': {
-                backgroundColor: 'rgba(102, 126, 234, 0.5)',
-              },
-            },
-          }}
-        >
-          <Table stickyHeader size="small" sx={{ minWidth: 1960 }}>
-            <TableHead>
-              <TableRow>
-                <TableCell sx={{ ...headerCellSx, minWidth: 150 }}>RTC No</TableCell>
-                <TableCell sx={{ ...headerCellSx, minWidth: 150 }}>RWB No</TableCell>
-                <TableCell sx={{ ...headerCellSx, minWidth: 160 }}>RWBMT Gross</TableCell>
-                <TableCell sx={{ ...headerCellSx, minWidth: 150 }}>Seal No</TableCell>
-                <TableCell sx={{ ...headerCellSx, minWidth: 120 }}>Type</TableCell>
-                <TableCell sx={{ ...headerCellSx, minWidth: 160 }}>Dip (cm)</TableCell>
-                <TableCell sx={{ ...headerCellSx, minWidth: 160 }}>TOV (L)</TableCell>
-                <TableCell sx={{ ...headerCellSx, minWidth: 160 }}>Water (cm)</TableCell>
-                <TableCell sx={{ ...headerCellSx, minWidth: 160 }}>Water (L)</TableCell>
-                <TableCell sx={{ ...headerCellSx, minWidth: 160 }}>GOV (L)</TableCell>
-                <TableCell sx={{ ...headerCellSx, minWidth: 160 }}>Temperature</TableCell>
-                <TableCell sx={{ ...headerCellSx, minWidth: 160 }}>Density @ 20°C</TableCell>
-                <TableCell sx={{ ...headerCellSx, minWidth: 160 }}>Actual Density</TableCell>
-                <TableCell sx={{ ...headerCellSx, minWidth: 160 }}>ZDNMT</TableCell>
-                <TableCell sx={{ ...headerCellSx, minWidth: 180 }}>Diff Zdn RWBMT</TableCell>
-                <TableCell sx={{ ...headerCellSx, minWidth: 180 }}>Diff Zdn RWBMT %</TableCell>
-                <TableCell sx={{ ...headerCellSx, minWidth: 88 }}>Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {(formData.reportDetails || []).map((detail, index) => (
-                <TableRow 
-                  key={index}
+        {details.length === 0 ? (
+          <Box
+            sx={{
+              border: `1px dashed ${line}`,
+              borderRadius: 2,
+              py: 5,
+              px: 3,
+              textAlign: 'center',
+              color: muted,
+            }}
+          >
+            No detail rows yet. Use Add Detail to start.
+          </Box>
+        ) : (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+            {details.map((detail, index) => {
+              const rowId = rowIds[index] || `fallback-${index}`;
+              const open = !!extraOpen[rowId];
+              return (
+                <Box
+                  key={rowId}
                   sx={{
-                    '&:nth-of-type(odd)': {
-                      backgroundColor: 'rgba(102, 126, 234, 0.02)',
-                    },
-                    '&:hover': {
-                      backgroundColor: 'rgba(102, 126, 234, 0.05)',
-                    },
+                    border: `1px solid ${line}`,
+                    borderRadius: 2,
+                    p: { xs: 2, sm: 2.5 },
+                    backgroundColor: index % 2 === 0 ? '#ffffff' : '#f7fafb',
                   }}
                 >
-                  {/* RTC No */}
-                  <TableCell>
-                    <TextField
+                  <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                    <Typography sx={{ fontWeight: 700, color: ink, fontSize: '0.95rem' }}>
+                      Row {index + 1}
+                    </Typography>
+                    <Button
+                      type="button"
                       size="small"
-                      value={detail.rtcNo || ''}
-                      onChange={(e) => updateDetailField(index, 'rtcNo', e.target.value)}
-                      fullWidth
-                      sx={wideTextFieldStyles}
-                    />
-                  </TableCell>
-                  {/* RWB No */}
-                  <TableCell>
-                    <TextField
-                      size="small"
-                      value={detail.rwbNo || ''}
-                      onChange={(e) => updateDetailField(index, 'rwbNo', e.target.value)}
-                      fullWidth
-                      sx={wideTextFieldStyles}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <TextField
-                      size="small"
-                      value={measurementText(detail.rwbmtGross)}
-                      onChange={(e) => updateDetailField(index, 'rwbmtGross', e.target.value)}
-                      fullWidth
-                      inputProps={{ inputMode: 'decimal', 'aria-label': 'RWBMT Gross' }}
-                      sx={measurementInputStyles}
-                    />
-                  </TableCell>
-                  {/* Seal No */}
-                  <TableCell>
-                    <TextField
-                      size="small"
-                      value={detail.sealNo || ''}
-                      onChange={(e) => updateDetailField(index, 'sealNo', e.target.value)}
-                      fullWidth
-                      sx={wideTextFieldStyles}
-                    />
-                  </TableCell>
-                  {/* Type */}
-                  <TableCell>
-                    <TextField
-                      size="small"
-                      value={detail.type || ''}
-                      onChange={(e) => updateDetailField(index, 'type', e.target.value)}
-                      fullWidth
-                      sx={wideTextFieldStyles}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <TextField
-                      size="small"
-                      value={measurementText(detail.dipSm)}
-                      onChange={(e) => updateDetailField(index, 'dipSm', e.target.value)}
-                      fullWidth
-                      inputProps={{ inputMode: 'decimal', 'aria-label': 'Dip (cm)' }}
-                      sx={measurementInputStyles}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <TextField
-                      size="small"
-                      value={measurementText(detail.tovLiters)}
-                      onChange={(e) => updateDetailField(index, 'tovLiters', e.target.value)}
-                      fullWidth
-                      inputProps={{ inputMode: 'decimal', 'aria-label': 'TOV (L)' }}
-                      sx={measurementInputStyles}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <TextField
-                      size="small"
-                      value={measurementText(detail.waterSm)}
-                      onChange={(e) => updateDetailField(index, 'waterSm', e.target.value)}
-                      fullWidth
-                      inputProps={{ inputMode: 'decimal', 'aria-label': 'Water (cm)' }}
-                      sx={measurementInputStyles}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <TextField
-                      size="small"
-                      value={measurementText(detail.waterLiters)}
-                      onChange={(e) => updateDetailField(index, 'waterLiters', e.target.value)}
-                      fullWidth
-                      inputProps={{ inputMode: 'decimal', 'aria-label': 'Water (L)' }}
-                      sx={measurementInputStyles}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <TextField
-                      size="small"
-                      value={measurementText(detail.govLiters)}
-                      onChange={(e) => updateDetailField(index, 'govLiters', e.target.value)}
-                      fullWidth
-                      inputProps={{ inputMode: 'decimal', 'aria-label': 'GOV (L)' }}
-                      sx={measurementInputStyles}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <TextField
-                      size="small"
-                      value={measurementText(detail.temperatureC)}
-                      onChange={(e) => updateDetailField(index, 'temperatureC', e.target.value)}
-                      fullWidth
-                      inputProps={{ inputMode: 'decimal', 'aria-label': 'Temperature' }}
-                      sx={measurementInputStyles}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <TextField
-                      size="small"
-                      value={measurementText(detail.densityAt20c)}
-                      onChange={(e) => updateDetailField(index, 'densityAt20c', e.target.value)}
-                      fullWidth
-                      inputProps={{ inputMode: 'decimal', 'aria-label': 'Density at 20°C' }}
-                      sx={measurementInputStyles}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <TextField
-                      size="small"
-                      value={measurementText(detail.actualDensity)}
-                      onChange={(e) => updateDetailField(index, 'actualDensity', e.target.value)}
-                      fullWidth
-                      inputProps={{ inputMode: 'decimal', 'aria-label': 'Actual Density' }}
-                      sx={measurementInputStyles}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <TextField
-                      size="small"
-                      value={measurementText(detail.zdnmt)}
-                      onChange={(e) => updateDetailField(index, 'zdnmt', e.target.value)}
-                      fullWidth
-                      inputProps={{ inputMode: 'decimal', 'aria-label': 'ZDNMT' }}
-                      sx={measurementInputStyles}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <TextField
-                      size="small"
-                      value={measurementText(detail.differenceZdnRwbmt)}
-                      onChange={(e) => updateDetailField(index, 'differenceZdnRwbmt', e.target.value)}
-                      fullWidth
-                      inputProps={{ inputMode: 'decimal', 'aria-label': 'Diff Zdn RWBMT' }}
-                      sx={measurementInputStyles}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <TextField
-                      size="small"
-                      value={measurementText(detail.differenceZdnRwbmtPercent)}
-                      onChange={(e) => updateDetailField(index, 'differenceZdnRwbmtPercent', e.target.value)}
-                      fullWidth
-                      inputProps={{ inputMode: 'decimal', 'aria-label': 'Diff Zdn RWBMT percent' }}
-                      sx={measurementInputStyles}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <IconButton
-                      size="small"
+                      startIcon={<DeleteIcon />}
                       onClick={() => removeDetailRow(index)}
                       sx={{
-                        color: '#dc3545',
-                        '&:hover': {
-                          backgroundColor: 'rgba(220, 53, 69, 0.1)',
-                        },
+                        color: '#9f1239',
+                        '&:hover': { backgroundColor: 'rgba(159, 18, 57, 0.08)' },
                       }}
                     >
-                      <DeleteIcon />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+                      Delete
+                    </Button>
+                  </Box>
+
+                  {renderDetailFields(detail, index, PRIMARY_FIELDS)}
+
+                  <Button
+                    type="button"
+                    size="small"
+                    aria-expanded={open}
+                    aria-controls={`extra-${rowId}`}
+                    onClick={() =>
+                      setExtraOpen((prev) => ({ ...prev, [rowId]: !prev[rowId] }))
+                    }
+                    startIcon={open ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                    sx={{ color: accent, mt: 2, px: 0.5 }}
+                  >
+                    Additional fields
+                  </Button>
+                  <Collapse in={open} id={`extra-${rowId}`}>
+                    <Box sx={{ pt: 2 }}>{renderDetailFields(detail, index, EXTRA_FIELDS)}</Box>
+                  </Collapse>
+                </Box>
+              );
+            })}
+          </Box>
+        )}
       </Paper>
 
       <Dialog open={previewOpen} onClose={() => setPreviewOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>JSON Preview</DialogTitle>
+        <DialogTitle sx={{ color: ink }}>JSON Preview</DialogTitle>
         <DialogContent>
-          <DialogContentText>
-            This is how the report will be stored in the canonical JSON format:
+          <DialogContentText sx={{ color: muted }}>
+            This is how the report will be stored in the canonical JSON format.
           </DialogContentText>
-          <Divider sx={{ my: 2 }} />
+          <Divider sx={{ my: 2, borderColor: line }} />
           <Box
             component="pre"
             sx={{
-              backgroundColor: '#f5f5f5',
+              backgroundColor: '#f4f7f9',
+              border: `1px solid ${line}`,
               p: 2,
               borderRadius: 1,
               overflow: 'auto',
               maxHeight: '400px',
-              fontSize: '0.875rem',
+              fontSize: '0.8125rem',
+              fontFamily: monoFamily,
+              color: ink,
             }}
           >
             {jsonPreview}
           </Box>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setPreviewOpen(false)}>Close</Button>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button type="button" onClick={() => setPreviewOpen(false)} sx={{ color: muted }}>
+            Close
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>
